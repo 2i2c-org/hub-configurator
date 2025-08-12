@@ -281,43 +281,48 @@
       const [catalog, setCatalog] = useState(null);
       const [copied, setCopied] = useState(null);
 
-    // Try external config (?config=URL) or ./config/catalog.json relative to this page; fallback to DEFAULT_CATALOG
-    useEffect(() => {
-      const params = new URLSearchParams(window.location.search);
-      const external = params.get("config");
-    
-      // Compute a base like "/tier-configurator/" or "/tier-configurator/docs/"
-      const here = window.location.pathname;
-      const base =
-        here.endsWith("/")
-          ? here
-          : here.replace(/[^/]+$/, ""); // strip filename if present
-    
-      // Candidate URLs, in order
-      const candidates = [
-        external,                                   // explicit ?config=...
-        `${base}config/catalog.json`,               // same folder (e.g., docs/config/catalog.json)
-      ].filter(Boolean);
-    
-      (async () => {
-        for (const u of candidates) {
-          try {
-            const url = u.includes("?") ? u : `${u}?t=${Date.now()}`; // cache-bust while testing
-            const r = await fetch(url, { cache: "no-store" });
-            if (!r.ok) continue;
-            const data = await r.json();
-            if (Array.isArray(data)) {
-              setCatalog(data);
-              return;
-            }
-          } catch (e) {
-            // try next candidate
+      // Load order:
+      // 1) Google Sheets override (window.CATALOG_OVERRIDE)
+      // 2) External ?config=<URL>
+      // 3) Relative ./config/catalog.json (repo-aware)
+      // 4) DEFAULT_CATALOG
+      useEffect(() => {
+        (async () => {
+          // 1) Sheets override
+          if (window.CATALOG_OVERRIDE) {
+            setCatalog(window.CATALOG_OVERRIDE);
+            return;
           }
-        }
-        setCatalog(DEFAULT_CATALOG);
-      })();
-    }, []);
 
+          // Helper: compute base path of current page (supports /docs/)
+          const here = window.location.pathname;
+          const base = here.endsWith("/") ? here : here.replace(/[^/]+$/, "");
+
+          // 2) External ?config=
+          const params = new URLSearchParams(window.location.search);
+          const external = params.get("config");
+
+          const candidates = [
+            external,
+            `${base}config/catalog.json`, // e.g. docs/config/catalog.json
+          ].filter(Boolean);
+
+          for (const u of candidates) {
+            try {
+              const url = u.includes("?") ? u : `${u}?t=${Date.now()}`; // cache-bust while testing
+              const r = await fetch(url, { cache: "no-store" });
+              if (!r.ok) continue;
+              const data = await r.json();
+              if (Array.isArray(data)) {
+                setCatalog(data);
+                return;
+              }
+            } catch (e) { /* try next */ }
+          }
+
+          setCatalog(DEFAULT_CATALOG);
+        })();
+      }, []);
 
       const activeCatalog = catalog ?? DEFAULT_CATALOG;
 
