@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tiered Product Configurator</title>
+
+  <!-- Tailwind Play CDN (no build step) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { --bg:#ffffff; --fg:#111827; }
+    body { background: var(--bg); color: var(--fg); }
+    .container { max-width: 1200px; }
+  </style>
+
+  <!-- React + ReactDOM UMD (no bundler needed) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+  <!-- Babel Standalone for in-browser JSX transform -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="antialiased">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useMemo, useState, useEffect, Fragment } = React;
+
+    // ----------------------------------
+    // Data model
+    // ----------------------------------
+    const TIERS = ["Essential", "Advanced", "Premier"];
+
+    // Default catalog (used if config JSON can't be fetched)
+    const DEFAULT_CATALOG = [
+      { id:"cluster:csp", group:"Cluster", label:"Cloud Service Provider",
+        perTier:{
+          Essential:{kind:"single", text:"AWS (2i2c-managed)"},
+          Advanced:{kind:"select", options:["AWS (2i2c-managed)","Google Cloud (2i2c-managed)","Microsoft Azure (2i2c-managed)"], default:"AWS (2i2c-managed)"},
+          Premier:{kind:"select", options:["AWS","Google Cloud","Microsoft Azure","OpenStack / on-prem (by agreement)"], default:"AWS"}
+        },
+        help:"Which cloud we deploy to and operate. OpenStack / on-prem is high effort → Premier."
+      },
+      { id:"cluster:billing", group:"Cluster", label:"Cloud Billing",
+        perTier:{
+          Essential:{kind:"single", text:"2i2c holds account; pass-through costs"},
+          Advanced:{kind:"select", options:["2i2c account; pass-through costs","Customer-owned account with 2i2c access"]},
+          Premier:{kind:"single", text:"Customer-owned account with 2i2c access"}
+        }
+      },
+      { id:"signin:auth", group:"Sign in", label:"Authentication Method(s)",
+        perTier:{
+          Essential:{kind:"single", text:"GitHub or Google (one provider)"},
+          Advanced:{kind:"select", options:["OIDC to institutional IdP","GitHub","Google","Multiple providers (OIDC + social)"], default:"OIDC to institutional IdP"},
+          Premier:{kind:"single", text:"Custom OIDC/SAML, multiple providers"}
+        }
+      },
+      { id:"reporting:monthly", group:"Reporting", label:"Monthly usage report",
+        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"reporting:grafana", group:"Reporting", label:"Usage & cost monitoring via Grafana",
+        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"hub:count", group:"JupyterHub", label:"Number of hubs configured",
+        perTier:{
+          Essential:{kind:"single", text:"1 hub"},
+          Advanced:{kind:"select", options:["1 hub","2 hubs (e.g., staging + prod)"], default:"1 hub"},
+          Premier:{kind:"select", options:["1 hub","2 hubs","3+ hubs (by agreement)"], default:"2 hubs"}
+        }
+      },
+      { id:"hub:ui", group:"JupyterHub", label:"UI Interface",
+        perTier:{ Essential:{kind:"single",text:"JupyterLab"}, Advanced:{kind:"single",text:"JupyterLab"}, Premier:{kind:"single",text:"JupyterLab (+ custom links)"} }
+      },
+      { id:"hub:dask", group:"JupyterHub", label:"Dask Gateway",
+        perTier:{
+          Essential:{kind:"flag",available:false},
+          Advanced:{kind:"select", options:["Disabled","Enabled (standard cap)"], default:"Enabled (standard cap)"},
+          Premier:{kind:"select", options:["Disabled","Enabled (standard cap)","Enabled (high cap)"], default:"Enabled (high cap)"}
+        }
+      },
+      { id:"hub:daskcap", group:"JupyterHub", label:"Hub-wide Dask node cap",
+        perTier:{
+          Essential:{kind:"single", text:"N/A"},
+          Advanced:{kind:"select", options:["Low","Medium"], default:"Medium"},
+          Premier:{kind:"select", options:["Medium","High","Very High"], default:"High"}
+        }
+      },
+      { id:"hub:resources", group:"JupyterHub", label:"Memory / CPU profiles",
+        perTier:{ Essential:{kind:"single",text:"Small / Medium"}, Advanced:{kind:"single",text:"Small / Medium / Large"}, Premier:{kind:"single",text:"Small → X-Large (customizable)"} }
+      },
+      { id:"hub:gpu", group:"JupyterHub", label:"GPU",
+        perTier:{
+          Essential:{kind:"flag",available:false},
+          Advanced:{kind:"select", options:["None","Single GPU profile"], default:"None"},
+          Premier:{kind:"select", options:["None","Multiple GPU profiles"], default:"Multiple GPU profiles"}
+        }
+      },
+      { id:"hub:images", group:"JupyterHub", label:"Software images",
+        perTier:{ Essential:{kind:"single",text:"1–2 curated images"}, Advanced:{kind:"single",text:"Up to 4 curated images"}, Premier:{kind:"single",text:"Custom images supported"} }
+      },
+      { id:"hub:customization", group:"JupyterHub", label:"Environment customization",
+        perTier:{ Essential:{kind:"single",text:"Per-hub overrides (limited)"}, Advanced:{kind:"single",text:"Per-hub & per-group overrides"}, Premier:{kind:"single",text:"Deep customization (by agreement)"} }
+      },
+      { id:"home:persistent", group:"Home Directory Storage", label:"Persistent Home Directory",
+        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"home:shares", group:"Home Directory Storage", label:"Shared folders",
+        help:"`shared-readwrite` (admins write), `shared` (read-only to all), `shared-public` (anyone write), `allusers` (admins write)",
+        perTier:{ Essential:{kind:"single",text:"shared, shared-readwrite"}, Advanced:{kind:"single",text:"shared, shared-readwrite, allusers"}, Premier:{kind:"single",text:"shared, shared-readwrite, allusers, shared-public"} }
+      },
+      { id:"home:quotas", group:"Home Directory Storage", label:"Enforce per-user quotas",
+        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"home:backups", group:"Home Directory Storage", label:"Backup home directories",
+        perTier:{ Essential:{kind:"single",text:"Weekly"}, Advanced:{kind:"single",text:"Daily"}, Premier:{kind:"single",text:"Daily + assisted restore"} }
+      },
+      { id:"obj:scratch", group:"Object Storage", label:"Scratch bucket",
+        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"obj:persistent", group:"Object Storage", label:"Persistent bucket",
+        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:true}, Premier:{kind:"single",text:"Multiple buckets supported"} }
+      },
+      { id:"wl:customfields", group:"White Labeling", label:"Custom fields on logged-out home page",
+        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"wl:fullpage", group:"White Labeling", label:"Fully custom logged-out home page",
+        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:false}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"dynimg:build", group:"Dynamic Image Building Support", label:"Dynamic image building",
+        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:false}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"docs:site", group:"JupyterBook Documentation", label:"docs.<community>.2i2c.cloud",
+        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"docs:groups", group:"JupyterBook Documentation", label:"Groups per hub",
+        perTier:{ Essential:{kind:"single",text:"One group per hub"}, Advanced:{kind:"single",text:"Multiple groups per hub"}, Premier:{kind:"single",text:"Multiple groups per hub"} }
+      },
+      { id:"sales:std", group:"Sales / Agreements", label:"Standard 2i2c / CS&S agreement",
+        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"sales:custagree", group:"Sales / Agreements", label:"Use customer's agreement",
+        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:false}, Premier:{kind:"flag",available:true} }
+      },
+      { id:"sales:costshare", group:"Sales / Agreements", label:"Cloud costs sharing?",
+        perTier:{ Essential:{kind:"single",text:"Pass-through only"}, Advanced:{kind:"single",text:"Pass-through or pooled by agreement"}, Premier:{kind:"single",text:"Flexible by agreement"} }
+      }
+    ];
+
+    // ----------------------------------
+    // Small UI helpers
+    // ----------------------------------
+    function CellFlag({ available }) {
+      return <div className="flex items-center justify-center py-2">{available ? "✓" : "✗"}</div>;
+    }
+    function CellSingle({ text }) {
+      return <div className="py-2 text-sm text-center">{text}</div>;
+    }
+    function CellSelect({ value, options, onChange }) {
+      return (
+        <div className="py-1 flex justify-center">
+          <select
+            className="w-60 border rounded px-2 py-1"
+            value={value}
+            onChange={(e)=>onChange(e.target.value)}
+          >
+            {options.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+      );
+    }
+    const TierBadge = ({ tier }) => (
+      <span className="inline-flex items-center text-xs font-medium rounded-full px-3 py-1 bg-gray-100">{tier}</span>
+    );
+    const GroupHeader = ({ name }) => (
+      <div className="col-span-4 mt-8 mb-2">
+        <div className="text-xs uppercase tracking-wider text-gray-500">{name}</div>
+        <div className="mt-1 h-px bg-gray-200" />
+      </div>
+    );
+
+    // ----------------------------------
+    // App
+    // ----------------------------------
+    function App() {
+      const [choices, setChoices] = useState({});
+      const [catalog, setCatalog] = useState(null);
+      const [copied, setCopied] = useState(null);
+
+      // Try external config (?config=URL) or /config/catalog.json; fallback to DEFAULT_CATALOG
+      useEffect(() => {
+        const urlParam = new URLSearchParams(window.location.search).get("config");
+        const candidates = [urlParam, "/config/catalog.json"].filter(Boolean);
+        (async () => {
+          for (const u of candidates) {
+            try {
+              const r = await fetch(u, { cache: "no-cache" });
+              if (r.ok) {
+                const data = await r.json();
+                setCatalog(data);
+                return;
+              }
+            } catch (_) { /* ignore and try next */ }
+          }
+          setCatalog(DEFAULT_CATALOG);
+        })();
+      }, []);
+
+      const activeCatalog = catalog ?? DEFAULT_CATALOG;
+
+      const grouped = useMemo(() => {
+        const groups = {};
+        activeCatalog.forEach((f) => {
+          const g = f.group || "Other";
+          groups[g] = groups[g] || [];
+          groups[g].push(f);
+        });
+        return groups;
+      }, [activeCatalog]);
+
+      const summary = useMemo(() => {
+        const out = {
+          Essential: { selects: [], flags: [] },
+          Advanced:  { selects: [], flags: [] },
+          Premier:   { selects: [], flags: [] },
+        };
+        activeCatalog.forEach((f) => {
+          TIERS.forEach((t) => {
+            const rule = f.perTier[t];
+            if (rule.kind === "flag") {
+              out[t].flags.push({ label: f.label, value: rule.available ? "Yes" : "No" });
+            } else if (rule.kind === "single") {
+              out[t].flags.push({ label: f.label, value: rule.text });
+            } else {
+              const val = (choices[f.id]?.[t]) ?? rule.default ?? rule.options[0];
+              out[t].selects.push({ label: f.label, value: val });
+            }
+          });
+        });
+        return out;
+      }, [choices, activeCatalog]);
+
+      const exportMarkdown = () => {
+        const lines = [];
+        TIERS.forEach((t) => {
+          lines.push(`# ${t}`);
+          summary[t].flags.forEach(({ label, value }) => lines.push(`- ${label}: ${value}`));
+          summary[t].selects.forEach(({ label, value }) => lines.push(`- ${label}: ${value}`));
+          lines.push("");
+        });
+        const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "tier-selections.md";
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const toMachineJSON = () => {
+        const payload = {
+          generatedAt: new Date().toISOString(),
+          tiers: TIERS,
+          selections: TIERS.reduce((acc, t) => {
+            const byFeature = {};
+            activeCatalog.forEach((f) => {
+              const rule = f.perTier[t];
+              if (rule.kind === "flag") byFeature[f.id] = rule.available;
+              else if (rule.kind === "single") byFeature[f.id] = rule.text;
+              else byFeature[f.id] = (choices[f.id]?.[t]) ?? rule.default ?? rule.options[0];
+            });
+            acc[t] = byFeature;
+            return acc;
+          }, {}),
+          catalogVersion: "external-or-default",
+        };
+        return payload;
+      };
+
+      const copyJSON = async () => {
+        const payload = toMachineJSON();
+        await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+        setCopied("Selections JSON copied to clipboard");
+        setTimeout(() => setCopied(null), 2000);
+      };
+
+      return (
+        <div className="min-h-screen p-6 md:p-10">
+          <div className="container mx-auto bg-white shadow rounded-lg border">
+            <div className="p-6 border-b">
+              <h1 className="text-2xl font-semibold">Tiered Product Configurator</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Choose feature options for <strong>Essential</strong>, <strong>Advanced</strong>, and <strong>Premier</strong>.
+                Some features are fixed per tier; a few allow a single choice to keep delivery effort predictable.
+              </p>
+            </div>
+
+            <div className="p-6">
+              {/* Header */}
+              <div className="grid grid-cols-4 items-center gap-2 px-2 pb-3">
+                <div />
+                {TIERS.map((t) => (
+                  <div key={t} className="text-center font-semibold">
+                    <TierBadge tier={t} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Groups */}
+              {Object.entries(grouped).map(([gname, feats]) => (
+                <div key={gname}>
+                  <GroupHeader name={gname} />
+                  <div className="grid grid-cols-4 gap-y-3">
+                    {feats.map((f) => (
+                      <Fragment key={f.id}>
+                        <div className="pr-4 py-2">
+                          <div className="text-[0.95rem] leading-5 font-medium">{f.label}</div>
+                          {f.help && <div className="text-xs text-gray-500 mt-0.5">{f.help}</div>}
+                        </div>
+
+                        {TIERS.map((t) => {
+                          const rule = f.perTier[t];
+                          if (rule.kind === "flag") return <CellFlag key={`${f.id}:${t}`} available={rule.available} />;
+                          if (rule.kind === "single") return <CellSingle key={`${f.id}:${t}`} text={rule.text} />;
+                          const val = choices[f.id]?.[t] ?? rule.default ?? rule.options[0];
+                          return (
+                            <CellSelect
+                              key={`${f.id}:${t}`}
+                              value={val}
+                              options={rule.options}
+                              onChange={(v) =>
+                                setChoices((prev) => ({
+                                  ...prev,
+                                  [f.id]: { ...(prev[f.id] || {}), [t]: v },
+                                }))
+                              }
+                            />
+                          );
+                        })}
+                      </Fragment>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div className="mt-8 flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
+                <div className="text-xs text-gray-600">
+                  Unavailable features show a ✗. {copied && <span className="text-green-600 ml-2">{copied}</span>}
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-3 py-2 text-sm rounded border" onClick={exportMarkdown}>
+                    Export selections (Markdown)
+                  </button>
+                  <button className="px-3 py-2 text-sm rounded border bg-gray-50" onClick={copyJSON}>
+                    Copy config (JSON)
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer className="container mx-auto text-xs text-gray-500 mt-4 px-2">
+            Tip: Provide <code>?config=&lt;URL&gt;</code> to load a remote catalog, or host <code>/config/catalog.json</code>.
+          </footer>
+        </div>
+      );
+    }
+
+    // Render
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
