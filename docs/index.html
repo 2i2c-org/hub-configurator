@@ -20,16 +20,21 @@
   <!-- Babel Standalone for in-browser JSX transform -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  <!-- Google Sheets CSV loader (sets window.CATALOG_OVERRIDE if URL params present) -->
+  <!-- Google Sheets CSV loader (sets window.CATALOG_OVERRIDE when ready) -->
   <script>
   /**
-   * Load catalog from three published CSVs (Google Sheets → File → Share → Publish to web → CSV).
+   * Load catalog from three CSVs (Google Sheets → Publish to web OR /export?format=csv).
    * URL params: ?features=<CSV>&tierrules=<CSV>&options=<CSV>
-   * Exposes window.CATALOG_OVERRIDE = catalogArray when successful.
+   * Exposes:
+   *   - window.CATALOG_OVERRIDE_PROMISE (Promise)
+   *   - window.CATALOG_OVERRIDE (Array) when resolved
+   * Fires:
+   *   - window "catalog-override" event when data is ready (or on failure with detail.error)
    */
   (function(){
     const SHEET_TIERS = ["Essential", "Advanced", "Premier"];
 
+    // Minimal CSV parser (handles quotes, commas, newlines)
     function parseCSV(text) {
       const rows = [];
       let cur = [], val = "", i = 0, inQ = false;
@@ -57,9 +62,27 @@
     }
 
     async function fetchCSV(url) {
-      const r = await fetch(url, { cache: "no-store" });
-      if (!r.ok) throw new Error(`Fetch failed ${r.status} for ${url}`);
-      return parseCSV(await r.text());
+      // Try direct (works for /export?format=csv and most publish links)
+      const r = await fetch(url, { cache: "no-store", redirect: "follow" });
+      const contentType = (r.headers.get("content-type") || "").toLowerCase();
+      let text;
+      if (r.ok && (contentType.includes("text/csv") || contentType.includes("text/plain") || contentType.includes("application/vnd.ms-excel"))) {
+        text = await r.text();
+        return parseCSV(text);
+      }
+      // If we got HTML, try to extract an embedded CSV link (Google's publish shim)
+      text = await r.text();
+      const linkMatch =
+        text.match(/href="([^"]+output=csv[^"]*)"/i) ||
+        text.match(/href="(https:\/\/docs\.google\.com\/spreadsheets\/d\/[^"]+?export\?format=csv[^"]*)"/i) ||
+        text.match(/location(?:\.href|\.assign|=)\s*['"]([^'"]+output=csv[^'"]*)['"]/i);
+      if (linkMatch && linkMatch[1]) {
+        const follow = linkMatch[1].replace(/&amp;/g, "&");
+        const r2 = await fetch(follow, { cache: "no-store", redirect: "follow" });
+        if (!r2.ok) throw new Error(`Follow-up CSV fetch failed: ${r2.status}`);
+        return parseCSV(await r2.text());
+      }
+      throw new Error("Expected CSV but received an HTML wrapper. Prefer /export?format=csv&gid=... URLs.");
     }
 
     async function loadCatalogFromSheets({ featuresCsv, tierrulesCsv, optionsCsv }) {
@@ -134,21 +157,28 @@
     (async function maybeLoadSheets(){
       try {
         const qs = new URLSearchParams(location.search);
-        const featuresCsv = qs.get("features");
+        const featuresCsv  = qs.get("features");
         const tierrulesCsv = qs.get("tierrules");
-        const optionsCsv = qs.get("options");
+        const optionsCsv   = qs.get("options");
+
         if (featuresCsv && tierrulesCsv && optionsCsv) {
-          const data = await loadCatalogFromSheets({ featuresCsv, tierrulesCsv, optionsCsv });
-          window.CATALOG_OVERRIDE = data; // consumed by app’s loader
+          const p = loadCatalogFromSheets({ featuresCsv, tierrulesCsv, optionsCsv });
+          window.CATALOG_OVERRIDE_PROMISE = p;
+
+          const data = await p;
+          window.CATALOG_OVERRIDE = data;
+
+          // Notify the app even if it already mounted
+          window.dispatchEvent(new CustomEvent("catalog-override", { detail: { source: "sheets", count: data.length } }));
           console.log("Loaded catalog from Google Sheets CSVs:", data);
         }
       } catch (e) {
         console.warn("Sheet loader failed:", e);
+        window.dispatchEvent(new CustomEvent("catalog-override", { detail: { error: String(e) } }));
       }
     })();
   })();
   </script>
-  
 </head>
 <body class="antialiased">
   <div id="root"></div>
@@ -161,85 +191,85 @@
     // ----------------------------------
     const TIERS = ["Essential", "Advanced", "Premier"];
 
-    // Default catalog (used if config JSON can't be fetched)
+    // Default catalog (generic demo data)
     const DEFAULT_CATALOG = [
-          {
-            "id": "group1:feature1",
-            "group": "Group 1",
-            "label": "Feature 1",
-            "perTier": {
-              "Essential": { "kind": "single", "text": "Option 1" },
-              "Advanced": {
-                "kind": "select",
-                "options": ["Option 1", "Option 2", "Option 3"],
-                "default": "Option 1"
-              },
-              "Premier": {
-                "kind": "select",
-                "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-                "default": "Option 2"
-              }
-            }
+      {
+        "id": "group1:feature1",
+        "group": "Group 1",
+        "label": "Feature 1",
+        "perTier": {
+          "Essential": { "kind": "single", "text": "Option 1" },
+          "Advanced": {
+            "kind": "select",
+            "options": ["Option 1", "Option 2", "Option 3"],
+            "default": "Option 1"
           },
-          {
-            "id": "group1:feature2",
-            "group": "Group 1",
-            "label": "Feature 2",
-            "perTier": {
-              "Essential": { "kind": "flag", "available": true },
-              "Advanced": { "kind": "flag", "available": false },
-              "Premier": { "kind": "flag", "available": true }
-            }
-          },
-          {
-            "id": "group2:feature3",
-            "group": "Group 2",
-            "label": "Feature 3",
-            "perTier": {
-              "Essential": { "kind": "single", "text": "Basic" },
-              "Advanced": { "kind": "single", "text": "Standard" },
-              "Premier": { "kind": "single", "text": "Premium" }
-            }
-          },
-          {
-            "id": "group2:feature4",
-            "group": "Group 2",
-            "label": "Feature 4",
-            "perTier": {
-              "Essential": { "kind": "flag", "available": false },
-              "Advanced": {
-                "kind": "select",
-                "options": ["Enabled", "Disabled"],
-                "default": "Enabled"
-              },
-              "Premier": {
-                "kind": "select",
-                "options": ["Enabled", "Disabled", "Custom"],
-                "default": "Custom"
-              }
-            }
-          },
-          {
-            "id": "group3:feature5",
-            "group": "Group 3",
-            "label": "Feature 5",
-            "perTier": {
-              "Essential": { "kind": "single", "text": "Included" },
-              "Advanced": { "kind": "single", "text": "Included" },
-              "Premier": { "kind": "single", "text": "Included + Extras" }
-            }
-          },
-          {
-            "id": "group3:feature6",
-            "group": "Group 3",
-            "label": "Feature 6",
-            "perTier": {
-              "Essential": { "kind": "flag", "available": false },
-              "Advanced": { "kind": "flag", "available": true },
-              "Premier": { "kind": "flag", "available": true }
-            }
+          "Premier": {
+            "kind": "select",
+            "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+            "default": "Option 2"
           }
-        ];
+        }
+      },
+      {
+        "id": "group1:feature2",
+        "group": "Group 1",
+        "label": "Feature 2",
+        "perTier": {
+          "Essential": { "kind": "flag", "available": true },
+          "Advanced": { "kind": "flag", "available": false },
+          "Premier": { "kind": "flag", "available": true }
+        }
+      },
+      {
+        "id": "group2:feature3",
+        "group": "Group 2",
+        "label": "Feature 3",
+        "perTier": {
+          "Essential": { "kind": "single", "text": "Basic" },
+          "Advanced": { "kind": "single", "text": "Standard" },
+          "Premier": { "kind": "single", "text": "Premium" }
+        }
+      },
+      {
+        "id": "group2:feature4",
+        "group": "Group 2",
+        "label": "Feature 4",
+        "perTier": {
+          "Essential": { "kind": "flag", "available": false },
+          "Advanced": {
+            "kind": "select",
+            "options": ["Enabled", "Disabled"],
+            "default": "Enabled"
+          },
+          "Premier": {
+            "kind": "select",
+            "options": ["Enabled", "Disabled", "Custom"],
+            "default": "Custom"
+          }
+        }
+      },
+      {
+        "id": "group3:feature5",
+        "group": "Group 3",
+        "label": "Feature 5",
+        "perTier": {
+          "Essential": { "kind": "single", "text": "Included" },
+          "Advanced": { "kind": "single", "text": "Included" },
+          "Premier": { "kind": "single", "text": "Included + Extras" }
+        }
+      },
+      {
+        "id": "group3:feature6",
+        "group": "Group 3",
+        "label": "Feature 6",
+        "perTier": {
+          "Essential": { "kind": "flag", "available": false },
+          "Advanced": { "kind": "flag", "available": true },
+          "Premier": { "kind": "flag", "available": true }
+        }
+      }
+    ];
 
     // ----------------------------------
     // Small UI helpers
@@ -281,47 +311,72 @@
       const [catalog, setCatalog] = useState(null);
       const [copied, setCopied] = useState(null);
 
-      // Load order:
-      // 1) Google Sheets override (window.CATALOG_OVERRIDE)
-      // 2) External ?config=<URL>
-      // 3) Relative ./config/catalog.json (repo-aware)
-      // 4) DEFAULT_CATALOG
+      // Load order with race-proof Sheets override:
+      // 1) If window.CATALOG_OVERRIDE exists, use it.
+      // 2) Listen for "catalog-override" in case it arrives later.
+      // 3) Otherwise: ?config=<URL> JSON → ./config/catalog.json → DEFAULT_CATALOG
       useEffect(() => {
-        (async () => {
-          // 1) Sheets override
-          if (window.CATALOG_OVERRIDE) {
+        let cancelled = false;
+
+        // Use immediately if already present
+        if (window.CATALOG_OVERRIDE && Array.isArray(window.CATALOG_OVERRIDE)) {
+          setCatalog(window.CATALOG_OVERRIDE);
+        }
+
+        // React to late-arriving override
+        const onOverride = () => {
+          if (cancelled) return;
+          if (window.CATALOG_OVERRIDE && Array.isArray(window.CATALOG_OVERRIDE)) {
             setCatalog(window.CATALOG_OVERRIDE);
-            return;
           }
+        };
+        window.addEventListener("catalog-override", onOverride);
 
-          // Helper: compute base path of current page (supports /docs/)
-          const here = window.location.pathname;
-          const base = here.endsWith("/") ? here : here.replace(/[^/]+$/, "");
-
-          // 2) External ?config=
-          const params = new URLSearchParams(window.location.search);
-          const external = params.get("config");
-
-          const candidates = [
-            external,
-            `${base}config/catalog.json`, // e.g. docs/config/catalog.json
-          ].filter(Boolean);
-
-          for (const u of candidates) {
+        (async () => {
+          // If a promise exists, give it a brief head start
+          if (window.CATALOG_OVERRIDE_PROMISE && !window.CATALOG_OVERRIDE) {
             try {
-              const url = u.includes("?") ? u : `${u}?t=${Date.now()}`; // cache-bust while testing
-              const r = await fetch(url, { cache: "no-store" });
-              if (!r.ok) continue;
-              const data = await r.json();
-              if (Array.isArray(data)) {
+              const data = await Promise.race([
+                window.CATALOG_OVERRIDE_PROMISE,
+                new Promise((resolve) => setTimeout(() => resolve(null), 1500)),
+              ]);
+              if (!cancelled && data && Array.isArray(data)) {
                 setCatalog(data);
                 return;
               }
-            } catch (e) { /* try next */ }
+            } catch { /* fall through */ }
           }
 
-          setCatalog(DEFAULT_CATALOG);
+          // Compute base path of current page (supports /docs/)
+          const here = window.location.pathname;
+          const base = here.endsWith("/") ? here : here.replace(/[^/]+$/, "");
+
+          // External ?config= (JSON) or relative config file
+          const params = new URLSearchParams(window.location.search);
+          const external = params.get("config");
+          const candidates = [external, `${base}config/catalog.json`].filter(Boolean);
+
+          for (const u of candidates) {
+            try {
+              const url = u.includes("?") ? u : `${u}?t=${Date.now()}`;
+              const r = await fetch(url, { cache: "no-store" });
+              if (!r.ok) continue;
+              const data = await r.json();
+              if (!cancelled && Array.isArray(data)) {
+                setCatalog(data);
+                return;
+              }
+            } catch { /* try next */ }
+          }
+
+          // Fallback
+          if (!cancelled) setCatalog(DEFAULT_CATALOG);
         })();
+
+        return () => {
+          cancelled = true;
+          window.removeEventListener("catalog-override", onOverride);
+        };
       }, []);
 
       const activeCatalog = catalog ?? DEFAULT_CATALOG;
@@ -478,7 +533,8 @@
           </div>
 
           <footer className="container mx-auto text-xs text-gray-500 mt-4 px-2">
-            Tip: Provide <code>?config=&lt;URL&gt;</code> to load a remote catalog, or host <code>/config/catalog.json</code>.
+            Tip: Provide <code>?features=&lt;CSV&gt;&amp;tierrules=&lt;CSV&gt;&amp;options=&lt;CSV&gt;</code> (Google Sheets) or
+            <code>?config=&lt;URL&gt;</code> to load a JSON catalog, or host <code>./config/catalog.json</code>.
           </footer>
         </div>
       );
