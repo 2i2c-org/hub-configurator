@@ -33,118 +33,83 @@
 
     // Default catalog (used if config JSON can't be fetched)
     const DEFAULT_CATALOG = [
-      { id:"cluster:csp", group:"Cluster", label:"Cloud Service Provider",
-        perTier:{
-          Essential:{kind:"single", text:"AWS (2i2c-managed)"},
-          Advanced:{kind:"select", options:["AWS (2i2c-managed)","Google Cloud (2i2c-managed)","Microsoft Azure (2i2c-managed)"], default:"AWS (2i2c-managed)"},
-          Premier:{kind:"select", options:["AWS","Google Cloud","Microsoft Azure","OpenStack / on-prem (by agreement)"], default:"AWS"}
-        },
-        help:"Which cloud we deploy to and operate. OpenStack / on-prem is high effort → Premier."
-      },
-      { id:"cluster:billing", group:"Cluster", label:"Cloud Billing",
-        perTier:{
-          Essential:{kind:"single", text:"2i2c holds account; pass-through costs"},
-          Advanced:{kind:"select", options:["2i2c account; pass-through costs","Customer-owned account with 2i2c access"]},
-          Premier:{kind:"single", text:"Customer-owned account with 2i2c access"}
-        }
-      },
-      { id:"signin:auth", group:"Sign in", label:"Authentication Method(s)",
-        perTier:{
-          Essential:{kind:"single", text:"GitHub or Google (one provider)"},
-          Advanced:{kind:"select", options:["OIDC to institutional IdP","GitHub","Google","Multiple providers (OIDC + social)"], default:"OIDC to institutional IdP"},
-          Premier:{kind:"single", text:"Custom OIDC/SAML, multiple providers"}
-        }
-      },
-      { id:"reporting:monthly", group:"Reporting", label:"Monthly usage report",
-        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"reporting:grafana", group:"Reporting", label:"Usage & cost monitoring via Grafana",
-        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"hub:count", group:"JupyterHub", label:"Number of hubs configured",
-        perTier:{
-          Essential:{kind:"single", text:"1 hub"},
-          Advanced:{kind:"select", options:["1 hub","2 hubs (e.g., staging + prod)"], default:"1 hub"},
-          Premier:{kind:"select", options:["1 hub","2 hubs","3+ hubs (by agreement)"], default:"2 hubs"}
-        }
-      },
-      { id:"hub:ui", group:"JupyterHub", label:"UI Interface",
-        perTier:{ Essential:{kind:"single",text:"JupyterLab"}, Advanced:{kind:"single",text:"JupyterLab"}, Premier:{kind:"single",text:"JupyterLab (+ custom links)"} }
-      },
-      { id:"hub:dask", group:"JupyterHub", label:"Dask Gateway",
-        perTier:{
-          Essential:{kind:"flag",available:false},
-          Advanced:{kind:"select", options:["Disabled","Enabled (standard cap)"], default:"Enabled (standard cap)"},
-          Premier:{kind:"select", options:["Disabled","Enabled (standard cap)","Enabled (high cap)"], default:"Enabled (high cap)"}
-        }
-      },
-      { id:"hub:daskcap", group:"JupyterHub", label:"Hub-wide Dask node cap",
-        perTier:{
-          Essential:{kind:"single", text:"N/A"},
-          Advanced:{kind:"select", options:["Low","Medium"], default:"Medium"},
-          Premier:{kind:"select", options:["Medium","High","Very High"], default:"High"}
-        }
-      },
-      { id:"hub:resources", group:"JupyterHub", label:"Memory / CPU profiles",
-        perTier:{ Essential:{kind:"single",text:"Small / Medium"}, Advanced:{kind:"single",text:"Small / Medium / Large"}, Premier:{kind:"single",text:"Small → X-Large (customizable)"} }
-      },
-      { id:"hub:gpu", group:"JupyterHub", label:"GPU",
-        perTier:{
-          Essential:{kind:"flag",available:false},
-          Advanced:{kind:"select", options:["None","Single GPU profile"], default:"None"},
-          Premier:{kind:"select", options:["None","Multiple GPU profiles"], default:"Multiple GPU profiles"}
-        }
-      },
-      { id:"hub:images", group:"JupyterHub", label:"Software images",
-        perTier:{ Essential:{kind:"single",text:"1–2 curated images"}, Advanced:{kind:"single",text:"Up to 4 curated images"}, Premier:{kind:"single",text:"Custom images supported"} }
-      },
-      { id:"hub:customization", group:"JupyterHub", label:"Environment customization",
-        perTier:{ Essential:{kind:"single",text:"Per-hub overrides (limited)"}, Advanced:{kind:"single",text:"Per-hub & per-group overrides"}, Premier:{kind:"single",text:"Deep customization (by agreement)"} }
-      },
-      { id:"home:persistent", group:"Home Directory Storage", label:"Persistent Home Directory",
-        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"home:shares", group:"Home Directory Storage", label:"Shared folders",
-        help:"`shared-readwrite` (admins write), `shared` (read-only to all), `shared-public` (anyone write), `allusers` (admins write)",
-        perTier:{ Essential:{kind:"single",text:"shared, shared-readwrite"}, Advanced:{kind:"single",text:"shared, shared-readwrite, allusers"}, Premier:{kind:"single",text:"shared, shared-readwrite, allusers, shared-public"} }
-      },
-      { id:"home:quotas", group:"Home Directory Storage", label:"Enforce per-user quotas",
-        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"home:backups", group:"Home Directory Storage", label:"Backup home directories",
-        perTier:{ Essential:{kind:"single",text:"Weekly"}, Advanced:{kind:"single",text:"Daily"}, Premier:{kind:"single",text:"Daily + assisted restore"} }
-      },
-      { id:"obj:scratch", group:"Object Storage", label:"Scratch bucket",
-        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"obj:persistent", group:"Object Storage", label:"Persistent bucket",
-        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:true}, Premier:{kind:"single",text:"Multiple buckets supported"} }
-      },
-      { id:"wl:customfields", group:"White Labeling", label:"Custom fields on logged-out home page",
-        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"wl:fullpage", group:"White Labeling", label:"Fully custom logged-out home page",
-        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:false}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"dynimg:build", group:"Dynamic Image Building Support", label:"Dynamic image building",
-        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:false}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"docs:site", group:"JupyterBook Documentation", label:"docs.<community>.2i2c.cloud",
-        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"docs:groups", group:"JupyterBook Documentation", label:"Groups per hub",
-        perTier:{ Essential:{kind:"single",text:"One group per hub"}, Advanced:{kind:"single",text:"Multiple groups per hub"}, Premier:{kind:"single",text:"Multiple groups per hub"} }
-      },
-      { id:"sales:std", group:"Sales / Agreements", label:"Standard 2i2c / CS&S agreement",
-        perTier:{ Essential:{kind:"flag",available:true}, Advanced:{kind:"flag",available:true}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"sales:custagree", group:"Sales / Agreements", label:"Use customer's agreement",
-        perTier:{ Essential:{kind:"flag",available:false}, Advanced:{kind:"flag",available:false}, Premier:{kind:"flag",available:true} }
-      },
-      { id:"sales:costshare", group:"Sales / Agreements", label:"Cloud costs sharing?",
-        perTier:{ Essential:{kind:"single",text:"Pass-through only"}, Advanced:{kind:"single",text:"Pass-through or pooled by agreement"}, Premier:{kind:"single",text:"Flexible by agreement"} }
-      }
-    ];
+          {
+            "id": "group1:feature1",
+            "group": "Group 1",
+            "label": "Feature 1",
+            "perTier": {
+              "Essential": { "kind": "single", "text": "Option 1" },
+              "Advanced": {
+                "kind": "select",
+                "options": ["Option 1", "Option 2", "Option 3"],
+                "default": "Option 1"
+              },
+              "Premier": {
+                "kind": "select",
+                "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+                "default": "Option 2"
+              }
+            }
+          },
+          {
+            "id": "group1:feature2",
+            "group": "Group 1",
+            "label": "Feature 2",
+            "perTier": {
+              "Essential": { "kind": "flag", "available": true },
+              "Advanced": { "kind": "flag", "available": false },
+              "Premier": { "kind": "flag", "available": true }
+            }
+          },
+          {
+            "id": "group2:feature3",
+            "group": "Group 2",
+            "label": "Feature 3",
+            "perTier": {
+              "Essential": { "kind": "single", "text": "Basic" },
+              "Advanced": { "kind": "single", "text": "Standard" },
+              "Premier": { "kind": "single", "text": "Premium" }
+            }
+          },
+          {
+            "id": "group2:feature4",
+            "group": "Group 2",
+            "label": "Feature 4",
+            "perTier": {
+              "Essential": { "kind": "flag", "available": false },
+              "Advanced": {
+                "kind": "select",
+                "options": ["Enabled", "Disabled"],
+                "default": "Enabled"
+              },
+              "Premier": {
+                "kind": "select",
+                "options": ["Enabled", "Disabled", "Custom"],
+                "default": "Custom"
+              }
+            }
+          },
+          {
+            "id": "group3:feature5",
+            "group": "Group 3",
+            "label": "Feature 5",
+            "perTier": {
+              "Essential": { "kind": "single", "text": "Included" },
+              "Advanced": { "kind": "single", "text": "Included" },
+              "Premier": { "kind": "single", "text": "Included + Extras" }
+            }
+          },
+          {
+            "id": "group3:feature6",
+            "group": "Group 3",
+            "label": "Feature 6",
+            "perTier": {
+              "Essential": { "kind": "flag", "available": false },
+              "Advanced": { "kind": "flag", "available": true },
+              "Premier": { "kind": "flag", "available": true }
+            }
+          }
+        ];
 
     // ----------------------------------
     // Small UI helpers
