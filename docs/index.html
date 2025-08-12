@@ -19,6 +19,136 @@
 
   <!-- Babel Standalone for in-browser JSX transform -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Google Sheets CSV loader (sets window.CATALOG_OVERRIDE if URL params present) -->
+  <script>
+  /**
+   * Load catalog from three published CSVs (Google Sheets → File → Share → Publish to web → CSV).
+   * URL params: ?features=<CSV>&tierrules=<CSV>&options=<CSV>
+   * Exposes window.CATALOG_OVERRIDE = catalogArray when successful.
+   */
+  (function(){
+    const SHEET_TIERS = ["Essential", "Advanced", "Premier"];
+
+    function parseCSV(text) {
+      const rows = [];
+      let cur = [], val = "", i = 0, inQ = false;
+      while (i < text.length) {
+        const c = text[i];
+        if (inQ) {
+          if (c === '"') {
+            if (text[i+1] === '"') { val += '"'; i += 2; continue; }
+            inQ = false; i++; continue;
+          }
+          val += c; i++; continue;
+        }
+        if (c === '"') { inQ = true; i++; continue; }
+        if (c === ',') { cur.push(val); val = ""; i++; continue; }
+        if (c === '\n' || c === '\r') {
+          if (c === '\r' && text[i+1] === '\n') i++;
+          cur.push(val); rows.push(cur); cur = []; val = ""; i++; continue;
+        }
+        val += c; i++;
+      }
+      cur.push(val); rows.push(cur);
+      const header = rows.shift().map(h => h.trim());
+      return rows.filter(r => r.length && r.some(x => String(x).trim() !== ""))
+                 .map(r => Object.fromEntries(header.map((h, idx) => [h, r[idx] ?? ""])));
+    }
+
+    async function fetchCSV(url) {
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error(`Fetch failed ${r.status} for ${url}`);
+      return parseCSV(await r.text());
+    }
+
+    async function loadCatalogFromSheets({ featuresCsv, tierrulesCsv, optionsCsv }) {
+      const [features, rules, options] = await Promise.all([
+        fetchCSV(featuresCsv),
+        fetchCSV(tierrulesCsv),
+        fetchCSV(optionsCsv),
+      ]);
+
+      const frows = features.map(x => ({
+        id: String(x.id || x.ID || "").trim(),
+        group: String(x.group || x.Group || "").trim(),
+        label: String(x.label || x.Label || "").trim(),
+        help: String(x.help || x.Help || "").trim(),
+      })).filter(x => x.id);
+
+      const orows = options.map(x => ({
+        id: String(x.id || x.ID || "").trim(),
+        tier: String(x.tier || x.Tier || "").trim(),
+        option: String(x.option || x.Option || "").trim(),
+      })).filter(x => x.id && x.tier);
+
+      const optsByKey = new Map();
+      for (const o of orows) {
+        const k = `${o.id}|||${o.tier}`;
+        if (!optsByKey.has(k)) optsByKey.set(k, []);
+        if (o.option) optsByKey.get(k).push(o.option);
+      }
+
+      const rrows = rules.map(x => ({
+        id: String(x.id || x.ID || "").trim(),
+        tier: String(x.tier || x.Tier || "").trim(),
+        kind: String(x.kind || x.Kind || "").trim().toLowerCase(),
+        available: String(x.available ?? x.Available ?? "").trim(),
+        text: String(x.text ?? x.Text ?? "").trim(),
+        default: String(x.default ?? x.Default ?? "").trim(),
+      })).filter(x => x.id && x.tier && x.kind);
+
+      const rulesByKey = new Map();
+      for (const r of rrows) rulesByKey.set(`${r.id}|||${r.tier}`, r);
+
+      const catalog = [];
+      for (const f of frows) {
+        const perTier = {};
+        for (const T of SHEET_TIERS) {
+          const k = `${f.id}|||${T}`;
+          const rule = rulesByKey.get(k);
+          if (!rule) continue;
+
+          if (rule.kind === "flag") {
+            const bool = /^true|1|yes$/i.test(rule.available);
+            perTier[T] = { kind: "flag", available: bool };
+          } else if (rule.kind === "single") {
+            perTier[T] = { kind: "single", text: rule.text };
+          } else if (rule.kind === "select") {
+            const list = (optsByKey.get(k) || []).filter(s => s !== "");
+            const def = rule.default || (list[0] || "");
+            perTier[T] = { kind: "select", options: list, ...(def ? { default: def } : {}) };
+          }
+        }
+        catalog.push({
+          id: f.id,
+          group: f.group || undefined,
+          label: f.label,
+          ...(f.help ? { help: f.help } : {}),
+          perTier
+        });
+      }
+      return catalog;
+    }
+
+    (async function maybeLoadSheets(){
+      try {
+        const qs = new URLSearchParams(location.search);
+        const featuresCsv = qs.get("features");
+        const tierrulesCsv = qs.get("tierrules");
+        const optionsCsv = qs.get("options");
+        if (featuresCsv && tierrulesCsv && optionsCsv) {
+          const data = await loadCatalogFromSheets({ featuresCsv, tierrulesCsv, optionsCsv });
+          window.CATALOG_OVERRIDE = data; // consumed by app’s loader
+          console.log("Loaded catalog from Google Sheets CSVs:", data);
+        }
+      } catch (e) {
+        console.warn("Sheet loader failed:", e);
+      }
+    })();
+  })();
+  </script>
+  
 </head>
 <body class="antialiased">
   <div id="root"></div>
