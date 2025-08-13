@@ -11,6 +11,13 @@
     :root { --bg:#ffffff; --fg:#111827; }
     body { background: var(--bg); color: var(--fg); }
     .container { max-width: 1200px; }
+
+    .cell-center {
+    display: flex;
+    align-items: center;   /* vertical centering */
+    justify-content: center; /* horizontal centering */
+    height: 100%;
+    }
   </style>
 
   <!-- React + ReactDOM UMD (no bundler needed) -->
@@ -278,7 +285,7 @@
       return <div className="flex items-center justify-center py-2">{available ? "✓" : "✗"}</div>;
     }
     function CellSingle({ text }) {
-      return <div className="py-2 text-sm text-center">{text}</div>;
+      return <div className="py-2 cell-center text-sm text-center">{text}</div>;
     }
     function CellSelect({ value, options, onChange }) {
       return (
