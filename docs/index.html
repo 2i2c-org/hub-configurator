@@ -190,6 +190,21 @@
 <body class="antialiased">
   <div id="root"></div>
 
+  <!-- Markdown + Sanitizer as globals (load these BEFORE your app) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
+
+   <!-- Define the helper on window -->
+  <script>
+    // marked and DOMPurify are globals from the scripts above
+    window.renderMarkdown = function(md = "") {
+      // marked.parse returns HTML
+      var html = window.marked.parse(md || "");
+      // sanitize the HTML before injecting
+      return window.DOMPurify.sanitize(html);
+    };
+  </script>
+
   <script type="text/babel">
     const { useMemo, useState, useEffect, Fragment } = React;
 
@@ -281,11 +296,17 @@
     // ----------------------------------
     // Small UI helpers
     // ----------------------------------
+
+    // Renders sanitized Markdown -> HTML
+    const MarkdownCell = ({ text }) => (
+      <div dangerouslySetInnerHTML={{ __html: window.renderMarkdown(text) }} />
+    );
+
     function CellFlag({ available }) {
       return <div className="flex items-center justify-center py-2">{available ? "✓" : "✗"}</div>;
     }
     function CellSingle({ text }) {
-      return <div className="py-2 cell-center text-sm text-center">{text}</div>;
+      return <div className="py-2 cell-center text-sm text-center"><MarkdownCell text={text}/></div>;
     }
     function CellSelect({ value, options, onChange }) {
       return (
