@@ -1,0 +1,82 @@
+{
+  "name": "Catalog Template",
+  "version": "2025.08.22",
+  "items": [
+      {
+        "id": "group1:feature1",
+        "group": "Group 1",
+        "label": "Feature 1",
+        "perTier": {
+          "Essential": { "kind": "single", "text": "Option 1" },
+          "Advanced": {
+            "kind": "select",
+            "options": ["Option 1", "Option 2", "Option 3"],
+            "default": "Option 1"
+          },
+          "Premier": {
+            "kind": "select",
+            "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+            "default": "Option 2"
+          }
+        }
+      },
+      {
+        "id": "group1:feature2",
+        "group": "Group 1",
+        "label": "Feature 2",
+        "perTier": {
+          "Essential": { "kind": "flag", "available": true },
+          "Advanced": { "kind": "flag", "available": false },
+          "Premier": { "kind": "flag", "available": true }
+        }
+      },
+      {
+        "id": "group2:feature3",
+        "group": "Group 2",
+        "label": "Feature 3",
+        "perTier": {
+          "Essential": { "kind": "single", "text": "Basic" },
+          "Advanced": { "kind": "single", "text": "Standard" },
+          "Premier": { "kind": "single", "text": "Premium" }
+        }
+      },
+      {
+        "id": "group2:feature4",
+        "group": "Group 2",
+        "label": "Feature 4",
+        "perTier": {
+          "Essential": { "kind": "flag", "available": false },
+          "Advanced": {
+            "kind": "select",
+            "options": ["Enabled", "Disabled"],
+            "default": "Enabled"
+          },
+          "Premier": {
+            "kind": "select",
+            "options": ["Enabled", "Disabled", "Custom"],
+            "default": "Custom"
+          }
+        }
+      },
+      {
+        "id": "group3:feature5",
+        "group": "Group 3",
+        "label": "Feature 5",
+        "perTier": {
+          "Essential": { "kind": "single", "text": "Included" },
+          "Advanced": { "kind": "single", "text": "Included" },
+          "Premier": { "kind": "single", "text": "Included + Extras" }
+        }
+      },
+      {
+        "id": "group3:feature6",
+        "group": "Group 3",
+        "label": "Feature 6",
+        "perTier": {
+          "Essential": { "kind": "flag", "available": false },
+          "Advanced": { "kind": "flag", "available": true },
+          "Premier": { "kind": "flag", "available": true }
+        }
+      }
+    ]
+  }

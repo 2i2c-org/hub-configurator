@@ -1,576 +1,488 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
+  <title>2i2c Hub Configurator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tiered Product Configurator</title>
-
-  <!-- Tailwind Play CDN (no build step) -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Inter to match 2i2c.org’s feel -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- JSON5 for relaxed catalogs (comments, unquoted keys) -->
+  <script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js" defer></script>
   <style>
-    :root { --bg:#ffffff; --fg:#111827; }
-    body { background: var(--bg); color: var(--fg); }
-    .container { max-width: 1200px; }
+    /* =========================
+       2i2c-inspired Design Tokens
+       ========================= */
+    :root{
+      /* Brand core */
+      --big-blue:#1D4EF5;   /* Primary */
+      --pale-blue:#F2F5FC;  /* Light background */
+      --midnight:#230344;   /* Deep contrast */
+      --mauve:#B86BFC;      /* Accent gradient partner */
+      --forest:#057761;     /* Success accent */
+      --magenta:#C60A76;    /* Warn/error accent */
 
-    .cell-center {
-    display: flex;
-    align-items: center;   /* vertical centering */
-    justify-content: center; /* horizontal centering */
-    height: 100%;
+      /* Surfaces & text (light) */
+      --bg:var(--pale-blue);
+      --panel:#ffffff;
+      --text:#0f1222;
+      --muted:#5a627a;
+      --line:#E3E7F2;
+      --chip:#F7F9FF;
+
+      /* Controls */
+      --btn-bg:#ffffff;
+      --btn-border:#D7DCF0;
+      --btn-hover:#eef2ff;
+
+      /* Shadows & radii */
+      --radius-s:10px;
+      --radius-m:14px;
+      --shadow:0 6px 20px rgba(15,17,34,0.08);
+      --focus:0 0 0 3px rgba(29,78,245,0.25);
+    }
+
+    /* Dark mode tuned to 2i2c’s deep purples/blues */
+    @media (prefers-color-scheme: dark){
+      :root{
+        --bg: radial-gradient(1200px 700px at 20% -20%, rgba(184,107,252,0.10), transparent 60%),
+              radial-gradient(900px 600px at 120% 10%, rgba(29,78,245,0.12), transparent 50%),
+              #0c0f1c;
+        --panel:#121527;
+        --text:#E9ECF8;
+        --muted:#A5AEC8;
+        --line:#232b43;
+        --chip:#0F142A;
+        --btn-bg:#141937;
+        --btn-border:#25305a;
+        --btn-hover:#18204b;
+        --shadow:0 8px 26px rgba(0,0,0,0.35);
+      }
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg);
+      color:var(--text);
+      font:16px/1.55 Inter, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans";
+      -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    }
+    a{color:var(--big-blue); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .app{max-width:1100px;margin:32px auto;padding:0 16px 64px}
+
+    /* Header with subtle 2i2c-ish gradient underline */
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px;
+      padding-bottom:10px; border-bottom:1px solid var(--line);
+      background:
+       linear-gradient(90deg, rgba(29,78,245,0.18), rgba(184,107,252,0.18)) bottom / 100% 2px no-repeat;
+    }
+    .title{font-size:clamp(22px,3.5vw,30px); font-weight:800; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:14px; max-width:60ch}
+
+    .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
+    .tier-toggle{
+      display:flex; background:var(--panel); border:1px solid var(--btn-border); border-radius:999px; padding:4px; box-shadow:var(--shadow);
+    }
+    .tier-btn{
+      border:0; background:transparent; color:var(--muted); padding:8px 14px; border-radius:999px; cursor:pointer;
+      font-weight:700; letter-spacing:.2px
+    }
+    .tier-btn.active{
+      background:linear-gradient(180deg, #fff, #f6f8ff);
+      color:#0b0f2a; border:1px solid var(--btn-border); box-shadow:inset 0 0 0 1px #eef1ff;
+    }
+    @media (prefers-color-scheme: dark){
+      .tier-btn.active{
+        background:linear-gradient(180deg, #1a1f45, #141a3a);
+        color:var(--text); border:1px solid #2a3465; box-shadow:inset 0 0 0 1px #2a3465;
+      }
+    }
+
+    .toolbar{display:flex; gap:8px; align-items:center; margin-top:8px; flex-wrap:wrap}
+    .btn{
+      background:var(--btn-bg); color:var(--text); border:1px solid var(--btn-border);
+      border-radius:12px; padding:8px 12px; cursor:pointer; box-shadow:var(--shadow); font-weight:600;
+    }
+    .btn:hover{background:var(--btn-hover)}
+    .btn:focus{outline:none; box-shadow:var(--focus)}
+    .btn.ghost{background:transparent}
+
+    .hint{font-size:12px; color:var(--muted)}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+    .grid{display:grid; grid-template-columns: 1.3fr 1fr; gap:10px; margin-top:16px}
+    .group{grid-column:1/-1; margin-top:18px; display:flex; align-items:center; gap:10px; color:var(--muted); font-weight:800; letter-spacing:.3px; text-transform:uppercase; font-size:12px}
+    .group .line{height:1px; background:var(--line); flex:1}
+
+    .card{
+      background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-m); padding:14px; display:flex; gap:10px; align-items:start; box-shadow:var(--shadow);
+    }
+    .label{font-weight:700}
+    .help{color:var(--muted); font-size:13px; margin-top:6px}
+
+    .right{display:flex; align-items:center; justify-content:flex-end}
+    select{
+      width:100%; background:linear-gradient(180deg,#fff,#f7f9ff); color:#0b0f2a; border:1px solid var(--btn-border); padding:10px 12px; border-radius:12px;
+      outline:none; font-weight:600; box-shadow:var(--shadow);
+    }
+    select:focus{box-shadow:var(--focus)}
+    @media (prefers-color-scheme: dark){
+      select{background:linear-gradient(180deg,#121938,#0e1530); color:var(--text); border-color:#2a3465}
+    }
+
+    .static{
+      background:var(--chip); border:1px solid var(--line); padding:8px 12px; border-radius:999px; display:inline-flex; align-items:center; gap:8px; box-shadow:var(--shadow)
+    }
+    .badge{display:inline-flex; align-items:center; gap:8px; border-radius:999px; padding:8px 12px; border:1px solid var(--line); box-shadow:var(--shadow)}
+    .badge.ok{background:rgba(5,119,97,0.10); color:#064e3b; border-color:rgba(5,119,97,0.35)}
+    .badge.no{background:rgba(198,10,118,0.10); color:#7b104b; border-color:rgba(198,10,118,0.35)}
+    @media (prefers-color-scheme: dark){
+      .badge.ok{background:rgba(12,239,174,0.12); color:#b6ffe7; border-color:rgba(12,239,174,0.35)}
+      .badge.no{background:rgba(255,78,79,0.10); color:#ffd5da; border-color:rgba(255,78,79,0.35)}
+    }
+
+    .k{opacity:.8; font-size:12px; color:var(--muted)}
+    .kv{font-weight:700}
+
+    .footer{margin-top:24px; color:var(--muted); font-size:13px}
+    .urlbox{
+      margin-top:8px; display:flex; gap:8px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px; box-shadow:var(--shadow)
+    }
+    .urlbox input{width:100%; background:transparent; border:0; color:var(--text); font:inherit; outline:none}
+    .pill{font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--line); background:linear-gradient(180deg,#fff,#f7f9ff); color:var(--muted)}
+    @media (prefers-color-scheme: dark){
+      .pill{background:linear-gradient(180deg,#141a3a,#101633)}
+    }
+
+    .sep{height:1px;background:var(--line);margin:14px 0}
+
+    /* Subtle hero tint behind page top, blends with brand gradient */
+    .heroish{
+      background:
+        radial-gradient(800px 200px at 0% 0%, rgba(29,78,245,0.10), transparent 50%),
+        radial-gradient(800px 200px at 100% 0%, rgba(184,107,252,0.10), transparent 50%);
+      border-radius:20px; padding:12px;
+    }
+
+    @media (max-width:920px){
+      .grid{grid-template-columns: 1fr}
+      .right{justify-content:flex-start}
     }
   </style>
-
-  <!-- React + ReactDOM UMD (no bundler needed) -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-
-  <!-- Babel Standalone for in-browser JSX transform -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Google Sheets CSV loader (sets window.CATALOG_OVERRIDE when ready) -->
-  <script>
-  /**
-   * Load catalog from three CSVs (Google Sheets → Publish to web OR /export?format=csv).
-   * URL params: ?features=<CSV>&tierrules=<CSV>&options=<CSV>
-   * Exposes:
-   *   - window.CATALOG_OVERRIDE_PROMISE (Promise)
-   *   - window.CATALOG_OVERRIDE (Array) when resolved
-   * Fires:
-   *   - window "catalog-override" event when data is ready (or on failure with detail.error)
-   */
-  (function(){
-    const SHEET_TIERS = ["Essential", "Advanced", "Premier"];
-
-    // Minimal CSV parser (handles quotes, commas, newlines)
-    function parseCSV(text) {
-      const rows = [];
-      let cur = [], val = "", i = 0, inQ = false;
-      while (i < text.length) {
-        const c = text[i];
-        if (inQ) {
-          if (c === '"') {
-            if (text[i+1] === '"') { val += '"'; i += 2; continue; }
-            inQ = false; i++; continue;
-          }
-          val += c; i++; continue;
-        }
-        if (c === '"') { inQ = true; i++; continue; }
-        if (c === ',') { cur.push(val); val = ""; i++; continue; }
-        if (c === '\n' || c === '\r') {
-          if (c === '\r' && text[i+1] === '\n') i++;
-          cur.push(val); rows.push(cur); cur = []; val = ""; i++; continue;
-        }
-        val += c; i++;
-      }
-      cur.push(val); rows.push(cur);
-      const header = rows.shift().map(h => h.trim());
-      return rows.filter(r => r.length && r.some(x => String(x).trim() !== ""))
-                 .map(r => Object.fromEntries(header.map((h, idx) => [h, r[idx] ?? ""])));
-    }
-
-    async function fetchCSV(url) {
-      // Try direct (works for /export?format=csv and most publish links)
-      const r = await fetch(url, { cache: "no-store", redirect: "follow" });
-      const contentType = (r.headers.get("content-type") || "").toLowerCase();
-      let text;
-      if (r.ok && (contentType.includes("text/csv") || contentType.includes("text/plain") || contentType.includes("application/vnd.ms-excel"))) {
-        text = await r.text();
-        return parseCSV(text);
-      }
-      // If we got HTML, try to extract an embedded CSV link (Google's publish shim)
-      text = await r.text();
-      const linkMatch =
-        text.match(/href="([^"]+output=csv[^"]*)"/i) ||
-        text.match(/href="(https:\/\/docs\.google\.com\/spreadsheets\/d\/[^"]+?export\?format=csv[^"]*)"/i) ||
-        text.match(/location(?:\.href|\.assign|=)\s*['"]([^'"]+output=csv[^'"]*)['"]/i);
-      if (linkMatch && linkMatch[1]) {
-        const follow = linkMatch[1].replace(/&amp;/g, "&");
-        const r2 = await fetch(follow, { cache: "no-store", redirect: "follow" });
-        if (!r2.ok) throw new Error(`Follow-up CSV fetch failed: ${r2.status}`);
-        return parseCSV(await r2.text());
-      }
-      throw new Error("Expected CSV but received an HTML wrapper. Prefer /export?format=csv&gid=... URLs.");
-    }
-
-    async function loadCatalogFromSheets({ featuresCsv, tierrulesCsv, optionsCsv }) {
-      const [features, rules, options] = await Promise.all([
-        fetchCSV(featuresCsv),
-        fetchCSV(tierrulesCsv),
-        fetchCSV(optionsCsv),
-      ]);
-
-      const frows = features.map(x => ({
-        id: String(x.id || x.ID || "").trim(),
-        group: String(x.group || x.Group || "").trim(),
-        label: String(x.label || x.Label || "").trim(),
-        help: String(x.help || x.Help || "").trim(),
-      })).filter(x => x.id);
-
-      const orows = options.map(x => ({
-        id: String(x.id || x.ID || "").trim(),
-        tier: String(x.tier || x.Tier || "").trim(),
-        option: String(x.option || x.Option || "").trim(),
-      })).filter(x => x.id && x.tier);
-
-      const optsByKey = new Map();
-      for (const o of orows) {
-        const k = `${o.id}|||${o.tier}`;
-        if (!optsByKey.has(k)) optsByKey.set(k, []);
-        if (o.option) optsByKey.get(k).push(o.option);
-      }
-
-      const rrows = rules.map(x => ({
-        id: String(x.id || x.ID || "").trim(),
-        tier: String(x.tier || x.Tier || "").trim(),
-        kind: String(x.kind || x.Kind || "").trim().toLowerCase(),
-        available: String(x.available ?? x.Available ?? "").trim(),
-        text: String(x.text ?? x.Text ?? "").trim(),
-        default: String(x.default ?? x.Default ?? "").trim(),
-      })).filter(x => x.id && x.tier && x.kind);
-
-      const rulesByKey = new Map();
-      for (const r of rrows) rulesByKey.set(`${r.id}|||${r.tier}`, r);
-
-      const catalog = [];
-      for (const f of frows) {
-        const perTier = {};
-        for (const T of SHEET_TIERS) {
-          const k = `${f.id}|||${T}`;
-          const rule = rulesByKey.get(k);
-          if (!rule) continue;
-
-          if (rule.kind === "flag") {
-            const bool = /^true|1|yes$/i.test(rule.available);
-            perTier[T] = { kind: "flag", available: bool };
-          } else if (rule.kind === "single") {
-            perTier[T] = { kind: "single", text: rule.text };
-          } else if (rule.kind === "select") {
-            const list = (optsByKey.get(k) || []).filter(s => s !== "");
-            const def = rule.default || (list[0] || "");
-            perTier[T] = { kind: "select", options: list, ...(def ? { default: def } : {}) };
-          }
-        }
-        catalog.push({
-          id: f.id,
-          group: f.group || undefined,
-          label: f.label,
-          ...(f.help ? { help: f.help } : {}),
-          perTier
-        });
-      }
-      return catalog;
-    }
-
-    (async function maybeLoadSheets(){
-      try {
-        const qs = new URLSearchParams(location.search);
-        const featuresCsv  = qs.get("features");
-        const tierrulesCsv = qs.get("tierrules");
-        const optionsCsv   = qs.get("options");
-
-        if (featuresCsv && tierrulesCsv && optionsCsv) {
-          const p = loadCatalogFromSheets({ featuresCsv, tierrulesCsv, optionsCsv });
-          window.CATALOG_OVERRIDE_PROMISE = p;
-
-          const data = await p;
-          window.CATALOG_OVERRIDE = data;
-
-          // Notify the app even if it already mounted
-          window.dispatchEvent(new CustomEvent("catalog-override", { detail: { source: "sheets", count: data.length } }));
-          console.log("Loaded catalog from Google Sheets CSVs:", data);
-        }
-      } catch (e) {
-        console.warn("Sheet loader failed:", e);
-        window.dispatchEvent(new CustomEvent("catalog-override", { detail: { error: String(e) } }));
-      }
-    })();
-  })();
-  </script>
 </head>
-<body class="antialiased">
-  <div id="root"></div>
-
-  <!-- Markdown + Sanitizer as globals (load these BEFORE your app) -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.7/dist/purify.min.js"></script>
-
-   <!-- Define the helper on window -->
-  <script>
-    // marked and DOMPurify are globals from the scripts above
-    window.renderMarkdown = function(md = "") {
-      // marked.parse returns HTML
-      var html = window.marked.parse(md || "");
-      // sanitize the HTML before injecting
-      return window.DOMPurify.sanitize(html);
-    };
-  </script>
-
-  <script type="text/babel">
-    const { useMemo, useState, useEffect, Fragment } = React;
-
-    // ----------------------------------
-    // Data model
-    // ----------------------------------
-    const TIERS = ["Essential", "Advanced", "Premier"];
-
-    // Default catalog (generic demo data)
-    const DEFAULT_CATALOG = [
-      {
-        "id": "group1:feature1",
-        "group": "Group 1",
-        "label": "Feature 1",
-        "perTier": {
-          "Essential": { "kind": "single", "text": "Option 1" },
-          "Advanced": {
-            "kind": "select",
-            "options": ["Option 1", "Option 2", "Option 3"],
-            "default": "Option 1"
-          },
-          "Premier": {
-            "kind": "select",
-            "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-            "default": "Option 2"
-          }
-        }
-      },
-      {
-        "id": "group1:feature2",
-        "group": "Group 1",
-        "label": "Feature 2",
-        "perTier": {
-          "Essential": { "kind": "flag", "available": true },
-          "Advanced": { "kind": "flag", "available": false },
-          "Premier": { "kind": "flag", "available": true }
-        }
-      },
-      {
-        "id": "group2:feature3",
-        "group": "Group 2",
-        "label": "Feature 3",
-        "perTier": {
-          "Essential": { "kind": "single", "text": "Basic" },
-          "Advanced": { "kind": "single", "text": "Standard" },
-          "Premier": { "kind": "single", "text": "Premium" }
-        }
-      },
-      {
-        "id": "group2:feature4",
-        "group": "Group 2",
-        "label": "Feature 4",
-        "perTier": {
-          "Essential": { "kind": "flag", "available": false },
-          "Advanced": {
-            "kind": "select",
-            "options": ["Enabled", "Disabled"],
-            "default": "Enabled"
-          },
-          "Premier": {
-            "kind": "select",
-            "options": ["Enabled", "Disabled", "Custom"],
-            "default": "Custom"
-          }
-        }
-      },
-      {
-        "id": "group3:feature5",
-        "group": "Group 3",
-        "label": "Feature 5",
-        "perTier": {
-          "Essential": { "kind": "single", "text": "Included" },
-          "Advanced": { "kind": "single", "text": "Included" },
-          "Premier": { "kind": "single", "text": "Included + Extras" }
-        }
-      },
-      {
-        "id": "group3:feature6",
-        "group": "Group 3",
-        "label": "Feature 6",
-        "perTier": {
-          "Essential": { "kind": "flag", "available": false },
-          "Advanced": { "kind": "flag", "available": true },
-          "Premier": { "kind": "flag", "available": true }
-        }
-      }
-    ];
-
-    // ----------------------------------
-    // Small UI helpers
-    // ----------------------------------
-
-    // Renders sanitized Markdown -> HTML
-    const MarkdownCell = ({ text }) => (
-      <div dangerouslySetInnerHTML={{ __html: window.renderMarkdown(text) }} />
-    );
-
-    function CellFlag({ available }) {
-      return <div className="flex items-center justify-center py-2">{available ? "✓" : "✗"}</div>;
-    }
-    function CellSingle({ text }) {
-      return <div className="py-2 cell-center text-sm text-center"><MarkdownCell text={text}/></div>;
-    }
-    function CellSelect({ value, options, onChange }) {
-      return (
-        <div className="py-1 flex justify-center">
-          <select
-            className="w-60 border rounded px-2 py-1"
-            value={value}
-            onChange={(e)=>onChange(e.target.value)}
-          >
-            {options.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
+<body>
+  <div class="app" id="app">
+    <header class="heroish">
+      <div>
+        <div class="title">2i2c Hub Configurator</div>
+        <div class="sub">
+          Choose options for <span class="mono">Essential</span>, <span class="mono">Advanced</span>, and <span class="mono">Premier</span>.
+          Switch tiers anytime—your picks stick per tier. Share or bookmark using the URL.
         </div>
-      );
-    }
-    const TierBadge = ({ tier }) => (
-      <span className="inline-flex items-center text-xs font-medium rounded-full px-3 py-1 bg-gray-100">{tier}</span>
-    );
-    const GroupHeader = ({ name }) => (
-      <div className="col-span-4 mt-8 mb-2">
-        <div className="text-xs uppercase tracking-wider text-gray-500">{name}</div>
-        <div className="mt-1 h-px bg-gray-200" />
       </div>
-    );
-
-    // ----------------------------------
-    // App
-    // ----------------------------------
-    function App() {
-      const [choices, setChoices] = useState({});
-      const [catalog, setCatalog] = useState(null);
-      const [copied, setCopied] = useState(null);
-
-      // Load order with race-proof Sheets override:
-      // 1) If window.CATALOG_OVERRIDE exists, use it.
-      // 2) Listen for "catalog-override" in case it arrives later.
-      // 3) Otherwise: ?config=<URL> JSON → ./config/catalog.json → DEFAULT_CATALOG
-      useEffect(() => {
-        let cancelled = false;
-
-        // Use immediately if already present
-        if (window.CATALOG_OVERRIDE && Array.isArray(window.CATALOG_OVERRIDE)) {
-          setCatalog(window.CATALOG_OVERRIDE);
-        }
-
-        // React to late-arriving override
-        const onOverride = () => {
-          if (cancelled) return;
-          if (window.CATALOG_OVERRIDE && Array.isArray(window.CATALOG_OVERRIDE)) {
-            setCatalog(window.CATALOG_OVERRIDE);
-          }
-        };
-        window.addEventListener("catalog-override", onOverride);
-
-        (async () => {
-          // If a promise exists, give it a brief head start
-          if (window.CATALOG_OVERRIDE_PROMISE && !window.CATALOG_OVERRIDE) {
-            try {
-              const data = await Promise.race([
-                window.CATALOG_OVERRIDE_PROMISE,
-                new Promise((resolve) => setTimeout(() => resolve(null), 1500)),
-              ]);
-              if (!cancelled && data && Array.isArray(data)) {
-                setCatalog(data);
-                return;
-              }
-            } catch { /* fall through */ }
-          }
-
-          // Compute base path of current page (supports /docs/)
-          const here = window.location.pathname;
-          const base = here.endsWith("/") ? here : here.replace(/[^/]+$/, "");
-
-          // External ?config= (JSON) or relative config file
-          const params = new URLSearchParams(window.location.search);
-          const external = params.get("config");
-          const candidates = [external, `${base}config/catalog.json`].filter(Boolean);
-
-          for (const u of candidates) {
-            try {
-              const url = u.includes("?") ? u : `${u}?t=${Date.now()}`;
-              const r = await fetch(url, { cache: "no-store" });
-              if (!r.ok) continue;
-              const data = await r.json();
-              if (!cancelled && Array.isArray(data)) {
-                setCatalog(data);
-                return;
-              }
-            } catch { /* try next */ }
-          }
-
-          // Fallback
-          if (!cancelled) setCatalog(DEFAULT_CATALOG);
-        })();
-
-        return () => {
-          cancelled = true;
-          window.removeEventListener("catalog-override", onOverride);
-        };
-      }, []);
-
-      const activeCatalog = catalog ?? DEFAULT_CATALOG;
-
-      const grouped = useMemo(() => {
-        const groups = {};
-        activeCatalog.forEach((f) => {
-          const g = f.group || "Other";
-          groups[g] = groups[g] || [];
-          groups[g].push(f);
-        });
-        return groups;
-      }, [activeCatalog]);
-
-      const summary = useMemo(() => {
-        const out = {
-          Essential: { selects: [], flags: [] },
-          Advanced:  { selects: [], flags: [] },
-          Premier:   { selects: [], flags: [] },
-        };
-        activeCatalog.forEach((f) => {
-          TIERS.forEach((t) => {
-            const rule = f.perTier[t];
-            if (rule.kind === "flag") {
-              out[t].flags.push({ label: f.label, value: rule.available ? "Yes" : "No" });
-            } else if (rule.kind === "single") {
-              out[t].flags.push({ label: f.label, value: rule.text });
-            } else {
-              const val = (choices[f.id]?.[t]) ?? rule.default ?? rule.options[0];
-              out[t].selects.push({ label: f.label, value: val });
-            }
-          });
-        });
-        return out;
-      }, [choices, activeCatalog]);
-
-      const exportMarkdown = () => {
-        const lines = [];
-        TIERS.forEach((t) => {
-          lines.push(`# ${t}`);
-          summary[t].flags.forEach(({ label, value }) => lines.push(`- ${label}: ${value}`));
-          summary[t].selects.forEach(({ label, value }) => lines.push(`- ${label}: ${value}`));
-          lines.push("");
-        });
-        const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "tier-selections.md";
-        a.click();
-        URL.revokeObjectURL(url);
-      };
-
-      const toMachineJSON = () => {
-        const payload = {
-          generatedAt: new Date().toISOString(),
-          tiers: TIERS,
-          selections: TIERS.reduce((acc, t) => {
-            const byFeature = {};
-            activeCatalog.forEach((f) => {
-              const rule = f.perTier[t];
-              if (rule.kind === "flag") byFeature[f.id] = rule.available;
-              else if (rule.kind === "single") byFeature[f.id] = rule.text;
-              else byFeature[f.id] = (choices[f.id]?.[t]) ?? rule.default ?? rule.options[0];
-            });
-            acc[t] = byFeature;
-            return acc;
-          }, {}),
-          catalogVersion: "external-or-default",
-        };
-        return payload;
-      };
-
-      const copyJSON = async () => {
-        const payload = toMachineJSON();
-        await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-        setCopied("Selections JSON copied to clipboard");
-        setTimeout(() => setCopied(null), 2000);
-      };
-
-      return (
-        <div className="min-h-screen p-6 md:p-10">
-          <div className="container mx-auto bg-white shadow rounded-lg border">
-            <div className="p-6 border-b">
-              <h1 className="text-2xl font-semibold">Tiered Product Configurator</h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Choose feature options for <strong>Essential</strong>, <strong>Advanced</strong>, and <strong>Premier</strong>.
-                Some features are fixed per tier; a few allow a single choice to keep delivery effort predictable.
-              </p>
-            </div>
-
-            <div className="p-6">
-              {/* Header */}
-              <div className="grid grid-cols-4 items-center gap-2 px-2 pb-3">
-                <div />
-                {TIERS.map((t) => (
-                  <div key={t} className="text-center font-semibold">
-                    <TierBadge tier={t} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Groups */}
-              {Object.entries(grouped).map(([gname, feats]) => (
-                <div key={gname}>
-                  <GroupHeader name={gname} />
-                  <div className="grid grid-cols-4 gap-y-3">
-                    {feats.map((f) => (
-                      <Fragment key={f.id}>
-                        <div className="pr-4 py-2">
-                          <div className="text-[0.95rem] leading-5 font-medium">{f.label}</div>
-                          {f.help && <div className="text-xs text-gray-500 mt-0.5">{f.help}</div>}
-                        </div>
-
-                        {TIERS.map((t) => {
-                          const rule = f.perTier[t];
-                          if (rule.kind === "flag") return <CellFlag key={`${f.id}:${t}`} available={rule.available} />;
-                          if (rule.kind === "single") return <CellSingle key={`${f.id}:${t}`} text={rule.text} />;
-                          const val = choices[f.id]?.[t] ?? rule.default ?? rule.options[0];
-                          return (
-                            <CellSelect
-                              key={`${f.id}:${t}`}
-                              value={val}
-                              options={rule.options}
-                              onChange={(v) =>
-                                setChoices((prev) => ({
-                                  ...prev,
-                                  [f.id]: { ...(prev[f.id] || {}), [t]: v },
-                                }))
-                              }
-                            />
-                          );
-                        })}
-                      </Fragment>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              <div className="mt-8 flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
-                <div className="text-xs text-gray-600">
-                  Unavailable features show a ✗. {copied && <span className="text-green-600 ml-2">{copied}</span>}
-                </div>
-                <div className="flex gap-2">
-                  <button className="px-3 py-2 text-sm rounded border" onClick={exportMarkdown}>
-                    Export selections (Markdown)
-                  </button>
-                  <button className="px-3 py-2 text-sm rounded border bg-gray-50" onClick={copyJSON}>
-                    Copy config (JSON)
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <footer className="container mx-auto text-xs text-gray-500 mt-4 px-2">
-            Tip: Provide <code>?features=&lt;CSV&gt;&amp;tierrules=&lt;CSV&gt;&amp;options=&lt;CSV&gt;</code> (Google Sheets) or
-            <code>?config=&lt;URL&gt;</code> to load a JSON catalog, or host <code>./config/catalog.json</code>.
-          </footer>
+      <div class="row">
+        <div class="tier-toggle" role="tablist" aria-label="Pick a tier">
+          <button class="tier-btn" data-tier="Essential" role="tab" aria-selected="false">Essential</button>
+          <button class="tier-btn" data-tier="Advanced" role="tab" aria-selected="false">Advanced</button>
+          <button class="tier-btn" data-tier="Premier" role="tab" aria-selected="false">Premier</button>
         </div>
-      );
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <button id="resetTier" class="btn" title="Reset current tier to catalog defaults">Reset tier to defaults</button>
+      <button id="resetAll" class="btn ghost" title="Reset all tiers to defaults">Reset all</button>
+      <span class="hint">Catalog: <span id="catalogName" class="mono">—</span> v<span id="catalogVersion">—</span></span>
+      <span class="hint" style="margin-left:8px">Source: <span id="catalogUrl" class="mono"></span></span>
+    </div>
+
+    <div id="grid" class="grid" aria-live="polite"></div>
+
+    <div class="footer">
+      <div><strong>Sharable link</strong> (auto-updates as you edit):</div>
+      <div class="urlbox">
+        <input id="shareUrl" type="text" readonly aria-label="Shareable URL" />
+        <button id="copyUrl" class="btn" title="Copy URL to clipboard">Copy</button>
+      </div>
+      <div class="hint">Tip: Load a different catalog with <span class="mono">?catalog=&lt;url&gt;</span>. Get machine-readable output with <span class="mono">?json=true</span>.</div>
+      <div class="sep"></div>
+      <div class="hint">Field legend: <span class="pill">single</span> fixed; <span class="pill">flag</span> included/excluded; <span class="pill">select</span> your choice.</div>
+    </div>
+  </div>
+
+  <script>
+  // -------- utilities: base64url + URL state --------
+  const b64u = {
+    enc: (str) => {
+      const b64 = btoa(unescape(encodeURIComponent(str)));
+      return b64.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    },
+    dec: (b64u) => {
+      const b64 = b64u.replace(/-/g,'+').replace(/_/g,'/') + '==='.slice((b64u.length+3)%4);
+      return decodeURIComponent(escape(atob(b64)));
+    }
+  };
+
+  function qs() { return new URLSearchParams(location.search); }
+  function setShareUrl(urlStr){ const el = document.getElementById('shareUrl'); if(el) el.value = urlStr; history.replaceState(null,'', urlStr); }
+  async function copyToClipboard(text){ try{ await navigator.clipboard.writeText(text); }catch(e){ /* ignore */ } }
+
+  // -------- global app state --------
+  const TIERS = ["Essential","Advanced","Premier"];
+  const appState = {
+    catalog: null,            // items[]
+    catalogMeta: {name:"Unnamed Catalog", version:"0.0"},
+    byGroup: new Map(),
+    selections: {Essential:{}, Advanced:{}, Premier:{}},
+    tier: "Essential"
+  };
+
+  // -------- catalog loading --------
+  const DEFAULT_CATALOG = "catalogs/catalog.json";
+  const catalogParam = qs().get('catalog');
+  const catalogUrl = catalogParam ? decodeURIComponent(catalogParam) : DEFAULT_CATALOG;
+  const jsonMode = (qs().get('json') === 'true');
+
+  function setCatalogUiBits(){
+    const nameEl = document.getElementById('catalogName');
+    const verEl = document.getElementById('catalogVersion');
+    const urlEl = document.getElementById('catalogUrl');
+    if(nameEl) nameEl.textContent = appState.catalogMeta.name;
+    if(verEl) verEl.textContent = appState.catalogMeta.version;
+    if(urlEl) urlEl.textContent = catalogUrl;
+  }
+
+  async function loadCatalog(url){
+    const res = await fetch(url, {cache:"no-store"});
+    const txt = await res.text();
+    const parsed = JSON5.parse(txt);
+
+    // Support both bare array and {name,version,items}
+    if (Array.isArray(parsed)) {
+      appState.catalogMeta = { name: "Unnamed Catalog", version: "0.0" };
+      appState.catalog = parsed;
+    } else if (parsed && Array.isArray(parsed.items)) {
+      appState.catalogMeta = {
+        name: parsed.name || "Unnamed Catalog",
+        version: parsed.version || "0.0"
+      };
+      appState.catalog = parsed.items;
+    } else {
+      throw new Error("Catalog must be an array or { items: [...] }");
     }
 
-    // Render
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App />);
+    appState.byGroup = appState.catalog.reduce((m,it)=>{
+      const g = it.group || "Other";
+      if(!m.has(g)) m.set(g,[]);
+      m.get(g).push(it);
+      return m;
+    }, new Map());
+  }
+
+  // -------- defaults from catalog --------
+  function getDefaultValue(item, tier){
+    const cfg = item?.perTier?.[tier];
+    if(!cfg) return null;
+    switch(cfg.kind){
+      case "single": return cfg.text ?? null;
+      case "flag"  : return !!cfg.available;
+      case "select": return cfg.default ?? (cfg.options?.[0] ?? null);
+      default: return null;
+    }
+  }
+  function ensureTierDefaults(tier){
+    const dest = appState.selections[tier];
+    appState.catalog.forEach(item=>{
+      if(dest[item.id] === undefined){
+        dest[item.id] = getDefaultValue(item, tier);
+      }
+    });
+  }
+
+  // -------- URL <-> state encoding --------
+  function encodeStateToUrl(){
+    const payload = {
+      tier: appState.tier,
+      selections: appState.selections,
+      catalog: catalogParam ? catalogUrl : undefined // persist custom catalog only
+    };
+    const s = b64u.enc(JSON.stringify(payload));
+    const url = new URL(location.href);
+    url.searchParams.set('state', s);
+    if(catalogParam){ url.searchParams.set('catalog', encodeURIComponent(catalogUrl)); }
+    if(jsonMode){ url.searchParams.set('json','true'); }
+    const clean = url.origin + url.pathname + '?' + url.searchParams.toString();
+    setShareUrl(clean);
+  }
+
+  function tryRestoreFromUrl(){
+    const s = qs().get('state');
+    if(!s) return false;
+    try{
+      const obj = JSON.parse(b64u.dec(s));
+      if(obj?.selections && obj?.tier){
+        TIERS.forEach(t=>{ appState.selections[t] = obj.selections[t] || {}; });
+        appState.tier = TIERS.includes(obj.tier) ? obj.tier : "Essential";
+        return true;
+      }
+    }catch(e){ console.warn("Failed to parse state from URL", e); }
+    return false;
+  }
+
+  // -------- rendering --------
+  function h(tag, attrs={}, children=[]){
+    const el = document.createElement(tag);
+    for(const [k,v] of Object.entries(attrs||{})){
+      if(k==='class') el.className = v;
+      else if(k==='html') el.innerHTML = v;
+      else if(k.startsWith('on') && typeof v==='function') el.addEventListener(k.substring(2), v);
+      else el.setAttribute(k, v);
+    }
+    (Array.isArray(children)?children:[children]).filter(Boolean).forEach(c=>{
+      if(typeof c === 'string') el.appendChild(document.createTextNode(c));
+      else el.appendChild(c);
+    });
+    return el;
+  }
+
+  function renderTierTabs(){
+    document.querySelectorAll('.tier-btn').forEach(btn=>{
+      const t = btn.dataset.tier;
+      const active = (t===appState.tier);
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true':'false');
+    });
+  }
+
+  function renderGrid(){
+    const grid = document.getElementById('grid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    const tier = appState.tier;
+    ensureTierDefaults(tier);
+    for(const [group, items] of appState.byGroup){
+      grid.appendChild(h('div', {class:'group'}, [
+        h('span', {}, group),
+        h('div', {class:'line'})
+      ]));
+      items.forEach(item=>{
+        const cfg = item.perTier?.[tier];
+        if(!cfg){ return; }
+        const left = h('div', {class:'card'}, [
+          h('div', {class:'label'}, item.label || item.id),
+          item.help ? h('div', {class:'help'}, item.help) : null
+        ]);
+        let rightContent = null;
+
+        if(cfg.kind === 'select'){
+          const opts = cfg.options || [];
+          const sel = h('select', { 'aria-label': item.label || item.id },
+            opts.map(o => {
+              const opt = h('option', {value: String(o)}, String(o));
+              if(String(appState.selections[tier][item.id]) === String(o)) opt.selected = true;
+              return opt;
+            })
+          );
+          sel.addEventListener('change', e=>{
+            appState.selections[tier][item.id] = e.target.value;
+            encodeStateToUrl();
+          });
+          rightContent = sel;
+        } else if (cfg.kind === 'single'){
+          rightContent = h('div', {class:'static', title:'Fixed for this tier'}, [
+            h('span', {class:'k'}, 'single'),
+            h('span', {class:'kv'}, appState.selections[tier][item.id] ?? cfg.text ?? '')
+          ]);
+        } else if (cfg.kind === 'flag'){
+          const on = !!cfg.available;
+          appState.selections[tier][item.id] = on; // reflect catalog
+          rightContent = h('div', {class: 'badge ' + (on?'ok':'no'), title: on?'Included in this tier':'Not included in this tier'}, [
+            h('span', {class:'k'}, 'flag'),
+            h('span', {class:'kv'}, on ? 'Included' : 'Not included')
+          ]);
+        } else {
+          rightContent = h('div', {class:'static'}, 'Unsupported kind');
+        }
+
+        grid.appendChild(left);
+        grid.appendChild(h('div', {class:'right'}, rightContent));
+      });
+    }
+  }
+
+  // -------- actions --------
+  function setTier(tier){
+    if(!TIERS.includes(tier)) return;
+    appState.tier = tier;
+    renderTierTabs();
+    renderGrid();
+    encodeStateToUrl();
+  }
+  function resetTierToDefaults(){
+    const tier = appState.tier;
+    appState.selections[tier] = {};
+    ensureTierDefaults(tier);
+    renderGrid();
+    encodeStateToUrl();
+  }
+  function resetAll(){
+    appState.selections = {Essential:{}, Advanced:{}, Premier:{}};
+    TIERS.forEach(ensureTierDefaults);
+    renderGrid();
+    encodeStateToUrl();
+  }
+
+  // -------- JSON mode output (application/json via Blob redirect) --------
+  function emitJsonAndExit(){
+    const selectedTier = appState.tier;
+    const payload = {
+      catalog: appState.catalogMeta,
+      tier: selectedTier,
+      selections: appState.selections[selectedTier]   // << only the selected tier now
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    // Navigate to a JSON blob so the browser sets Content-Type correctly.
+    location.replace(url);
+  }
+
+  // -------- boot --------
+  async function boot(){
+    // Wire UI controls (harmless in json mode)
+    document.querySelectorAll('.tier-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=> setTier(btn.dataset.tier));
+    });
+    const resetTierBtn = document.getElementById('resetTier');
+    const resetAllBtn  = document.getElementById('resetAll');
+    const copyBtn      = document.getElementById('copyUrl');
+    if(resetTierBtn) resetTierBtn.addEventListener('click', resetTierToDefaults);
+    if(resetAllBtn)  resetAllBtn.addEventListener('click', resetAll);
+    if(copyBtn)      copyBtn.addEventListener('click', ()=>copyToClipboard(document.getElementById('shareUrl').value));
+
+    // Load catalog (needed for defaults even in json mode)
+    await loadCatalog(catalogUrl);
+    setCatalogUiBits();
+
+    // Restore state from URL if present; otherwise seed defaults
+    const restored = tryRestoreFromUrl();
+    if(!restored){ TIERS.forEach(ensureTierDefaults); }
+
+    if(jsonMode){
+      emitJsonAndExit();
+      return;
+    }
+
+    // Normal UI render
+    renderTierTabs();
+    renderGrid();
+    encodeStateToUrl();
+  }
+
+  if(document.readyState === 'loading'){ window.addEventListener('DOMContentLoaded', boot); }
+  else { boot(); }
   </script>
 </body>
 </html>
