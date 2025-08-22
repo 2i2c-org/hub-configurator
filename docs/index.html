@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Inter to match 2i2c.org’s feel -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <!-- JSON5 for relaxed catalogs (comments, unquoted keys) -->
+  <!-- JSON5 for relaxed catalogs (comments, trailing commas) -->
   <script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js" defer></script>
   <style>
     /* =========================
@@ -260,19 +260,16 @@
     const txt = await res.text();
     const parsed = JSON5.parse(txt);
 
-    // Support both bare array and {name,version,items}
-    if (Array.isArray(parsed)) {
-      appState.catalogMeta = { name: "Unnamed Catalog", version: "0.0" };
-      appState.catalog = parsed;
-    } else if (parsed && Array.isArray(parsed.items)) {
-      appState.catalogMeta = {
-        name: parsed.name || "Unnamed Catalog",
-        version: parsed.version || "0.0"
-      };
-      appState.catalog = parsed.items;
-    } else {
-      throw new Error("Catalog must be an array or { items: [...] }");
+    // REQUIRED SHAPE: { name, version, items: [...] }
+    if (!(parsed && typeof parsed === 'object' && Array.isArray(parsed.items))) {
+      throw new Error("Invalid catalog: expected an object with shape { name, version, items: [...] }");
     }
+
+    appState.catalogMeta = {
+      name: String(parsed.name ?? "Unnamed Catalog"),
+      version: String(parsed.version ?? "0.0")
+    };
+    appState.catalog = parsed.items;
 
     appState.byGroup = appState.catalog.reduce((m,it)=>{
       const g = it.group || "Other";
@@ -441,7 +438,7 @@
     const payload = {
       catalog: appState.catalogMeta,
       tier: selectedTier,
-      selections: appState.selections[selectedTier]   // << only the selected tier now
+      selections: appState.selections[selectedTier]   // only the selected tier
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
@@ -463,7 +460,15 @@
     if(copyBtn)      copyBtn.addEventListener('click', ()=>copyToClipboard(document.getElementById('shareUrl').value));
 
     // Load catalog (needed for defaults even in json mode)
-    await loadCatalog(catalogUrl);
+    try{
+      await loadCatalog(catalogUrl);
+    }catch(err){
+      document.body.innerHTML = "<pre style='white-space:pre-wrap; padding:16px; font-family:monospace; color:#b91c1c; background:#fff5f5; border:1px solid #fecaca; border-radius:12px; max-width:960px; margin:24px auto;'>"
+        + "Failed to load catalog.\n\n"
+        + String(err.message || err)
+        + "\n\nExpected shape:\n{\n  \"name\": \"...\",\n  \"version\": \"...\",\n  \"items\": [ /* ... */ ]\n}\n</pre>";
+      return;
+    }
     setCatalogUiBits();
 
     // Restore state from URL if present; otherwise seed defaults
