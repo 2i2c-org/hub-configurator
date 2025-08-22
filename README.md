@@ -1,1 +1,2 @@
-# tier-configurator
+# hub-configurator
+
