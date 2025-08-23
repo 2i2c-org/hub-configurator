@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Catalog Builder — Configurator-style</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js" defer></script>
+<style>
+  :root{
+    /* 2i2c-adjacent look */
+    --ink:#0b1024; --muted:#6b7390; --bg:#f5f8ff; --panel:#ffffff; --line:#e3e8f5;
+    --brand:#5a67ff; --brand2:#00c2ff; --accent:#b86bfc; --danger:#c7166f; --ok:#0e8c70;
+    --shadow:0 10px 30px rgba(10,12,28,.08); --radius:14px; --focus:0 0 0 3px rgba(90,103,255,.25);
+  }
+  @media(prefers-color-scheme:dark){
+    :root{ --bg:#0b0f1e; --panel:#101632; --ink:#e9ecf8; --muted:#a5aec8; --line:#233051; --shadow:0 10px 30px rgba(0,0,0,.45); }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,-apple-system,Segoe UI,Roboto;}
+  a{color:var(--brand);text-decoration:none} a:hover{text-decoration:underline}
+  .app{max-width:1200px;margin:26px auto 80px;padding:0 16px}
+
+  /* Top bar */
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .hdr-left{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .title{font-weight:800;font-size:clamp(18px,3vw,24px)}
+  .pill{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;box-shadow:var(--shadow);font-weight:600}
+  input[type="text"]{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;outline:none}
+  input[type="text"]:focus{box-shadow:var(--focus)}
+  .tier-tabs{display:flex;gap:6px;flex-wrap:wrap}
+  .tier-btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;cursor:pointer;font-weight:700}
+  .tier-btn.active{border-color:var(--brand);box-shadow:var(--focus)}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;box-shadow:var(--shadow);cursor:pointer;font-weight:700}
+  .btn:hover{background:#f7f9ff}
+  .btn.ghost{background:transparent}
+  .btn.danger{background:#fff2f8;border-color:#ffd0e6}
+  .btn.icon{padding:6px 8px}
+  .hint{color:var(--muted);font-size:12px}
+
+  /* Two-column item grid (like configurator) */
+  .catalog-head{background:linear-gradient(180deg,#fff,#f5f7ff);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:center;justify-content:space-between}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .group{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px}
+  .group h3{margin:0 0 8px 0;font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .item{display:grid;grid-template-columns:1.1fr .9fr;gap:12px;padding:10px;border:1px dashed var(--line);border-radius:12px;background:#fff;margin-bottom:10px}
+  @media(prefers-color-scheme:dark){.item{background:#0f1430}}
+  .left{display:flex;gap:10px}
+  .meta{flex:1}
+  .id{font-size:11px;color:var(--muted)}
+  .label{font-weight:800}
+  .help{color:var(--muted);font-size:13px;margin-top:4px}
+  .meta-edit{margin-top:8px;display:none}
+  .meta-edit.show{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .meta-edit .full{grid-column:1/-1}
+  .controls{display:flex;gap:6px;align-items:center}
+  .k{color:var(--muted);font-size:12px}
+  select, textarea{width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px;outline:none}
+  textarea{font-family:ui-monospace,Menlo,Consolas,monospace;min-height:80px}
+  select:focus, textarea:focus{box-shadow:var(--focus)}
+  .right .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .requires-pill{border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:12px;background:#fff}
+  .req-editor{margin-top:8px;display:none}
+  .req-editor.show{display:block}
+  .ok{color:var(--ok)} .err{color:var(--danger)}
+
+  /* Select option table */
+  .table{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-top:8px}
+  .table header, .table .row{display:grid;grid-template-columns:150px 1fr 1fr 1fr 110px;gap:8px;padding:8px;border-bottom:1px solid var(--line)}
+  .table header{background:linear-gradient(180deg,#fff,#f7f9ff);font-weight:700}
+  .table .row .btn{padding:6px 8px}
+  .mini{font-size:12px;color:var(--muted)}
+
+  /* Validation tray */
+  .tray{position:sticky;bottom:0;z-index:50;background:linear-gradient(180deg,rgba(245,248,255,.7),var(--panel));backdrop-filter:blur(6px);
+        border-top:1px solid var(--line);padding:10px 12px;box-shadow:0 -8px 30px rgba(0,0,0,.06);margin-top:16px}
+  .errors{display:flex;flex-direction:column;gap:6px;max-height:36vh;overflow:auto;margin-top:6px}
+  .errorRow{display:flex;gap:8px;border:1px dashed #f3a3c6;background:#fff5fa;padding:8px;border-radius:10px}
+  .where{font-family:ui-monospace,Menlo,Consolas,monospace}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="hdr-left">
+      <span class="title">Catalog Builder</span>
+      <span class="pill">catalog.json</span>
+      <span class="hint">Configure per-tier like the Hub Configurator, but with editing tools.</span>
+    </div>
+    <div class="toolbar">
+      <button id="newBtn" class="btn">New</button>
+      <button id="importUrlBtn" class="btn">Import URL</button>
+      <label class="btn">Import File
+        <input id="fileInput" type="file" accept=".json,.json5,application/json" style="display:none">
+      </label>
+      <button id="validateBtn" class="btn">Validate</button>
+      <button id="downloadBtn" class="btn">Download JSON</button>
+      <button id="copyBtn" class="btn">Copy JSON</button>
+    </div>
+  </header>
+
+  <div class="catalog-head">
+    <div class="row" style="display:flex;gap:10px;align-items:center">
+      <label class="k">Name</label>
+      <input id="catName" type="text" placeholder="e.g., Demo Catalog Template" style="min-width:240px">
+      <label class="k" style="margin-left:8px">Version</label>
+      <input id="catVersion" type="text" placeholder="e.g., 2025.08.23" style="width:150px">
+      <span class="hint">Autosaves to your browser</span>
+    </div>
+    <div class="tier-tabs" role="tablist" aria-label="Tier">
+      <button class="tier-btn active" data-tier="Essential">Essential</button>
+      <button class="tier-btn" data-tier="Advanced">Advanced</button>
+      <button class="tier-btn" data-tier="Premier">Premier</button>
+    </div>
+    <div class="row" style="display:flex;gap:8px;align-items:center">
+      <input id="publicUrl" type="text" placeholder="(optional) Public URL for this JSON">
+      <button id="openConfiguratorBtn" class="btn">Open in Configurator</button>
+    </div>
+  </div>
+
+  <div class="grid" id="catalogGrid" aria-live="polite"></div>
+
+  <div class="tray">
+    <div class="row" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div>
+        <strong>Validation</strong> <span id="valSummary" class="mini"></span>
+      </div>
+      <div class="row" style="display:flex;gap:8px;align-items:center">
+        <button id="runFullValidation" class="btn">Run</button>
+        <button id="addItemBtn" class="btn">Add Item</button>
+      </div>
+    </div>
+    <div id="errors" class="errors"></div>
+  </div>
+</div>
+
+<script>
+/* ========= Basics ========= */
+const TIERS = ["Essential","Advanced","Premier"];
+const OPS = ['eq','neq','in','nin','gt','gte','lt','lte','truthy','falsy'];
+
+const $ = (s, r=document)=>r.querySelector(s);
+const $$ = (s, r=document)=>Array.from(r.querySelectorAll(s));
+function h(tag, attrs={}, children=[]){
+  const el = document.createElement(tag);
+  for(const [k,v] of Object.entries(attrs)){
+    if(k==='class') el.className = v;
+    else if(k==='html') el.innerHTML = v;
+    else if(k.startsWith('on') && typeof v==='function') el.addEventListener(k.substring(2), v);
+    else el.setAttribute(k, v);
+  }
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c==null) return;
+    if(typeof c==='string') el.appendChild(document.createTextNode(c));
+    else el.appendChild(c);
+  });
+  return el;
+}
+function deep(x){ return JSON.parse(JSON.stringify(x)); }
+function nice(obj){ return JSON.stringify(obj,null,2); }
+function copy(text){ return navigator.clipboard.writeText(text).catch(()=>{}); }
+
+/* ========= State ========= */
+const state = {
+  catalog: blankCatalog(),
+  activeTier: "Essential"
+};
+const STORAGE_KEY='config-style-builder-v1';
+
+function blankCatalog(){
+  return {
+    name: 'New Catalog',
+    version: new Date().toISOString().slice(0,10),
+    items: []
+  };
+}
+function blankItem(){
+  return {
+    id: 'group1:feature1',
+    group: 'Group 1',
+    label: 'Feature 1',
+    help: '',
+    perTier: {
+      Essential: {kind:'single', text:'fixed value', help:''},
+      Advanced:  {kind:'flag', available:true, help:''},
+      Premier:   {kind:'select', options:[{value:'opt1', label:'Option 1', help:''}], default:'opt1', help:''}
+    }
+  };
+}
+
+/* ========= Persistence ========= */
+function save(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state.catalog)); }catch(e){} }
+function load(){ try{ const raw=localStorage.getItem(STORAGE_KEY); if(raw) state.catalog = JSON.parse(raw); }catch(e){} }
+
+/* ========= Rendering ========= */
+function render(){
+  // header fields
+  $('#catName').value = state.catalog.name || '';
+  $('#catVersion').value = state.catalog.version || '';
+
+  // groups & items in configurator-style grid
+  const grid = $('#catalogGrid');
+  grid.innerHTML = '';
+  const groups = groupOrder();
+  groups.forEach(g=>{
+    const groupBox = h('section', {class:'group', 'aria-label': g}, [
+      h('h3', {}, g),
+      ...itemsByGroup(g).map((it, idx)=>renderItemCard(it))
+    ]);
+    grid.appendChild(groupBox);
+  });
+}
+
+function renderItemCard(it){
+  const tier = state.activeTier;
+  const cfg = it.perTier?.[tier] || {kind:'single', text:''};
+
+  // Left (description + meta edit + row actions)
+  const left = h('div', {class:'left'}, [
+    h('div', {class:'meta', style:'flex:1'}, [
+      h('div', {class:'id'}, it.id),
+      h('div', {class:'label'}, it.label || '—'),
+      h('div', {class:'help'}, it.help || ''),
+      // meta edit toggle
+      h('div', {class:'controls', style:'margin-top:6px;gap:6px'}, [
+        h('button', {class:'btn icon', title:'Edit meta', onclick: (e)=>{
+          const pane = e.currentTarget.closest('.item').querySelector('.meta-edit');
+          pane.classList.toggle('show');
+        }}, '✎'),
+        h('button', {class:'btn icon', title:'Duplicate item', onclick:()=>duplicateItem(it.id)}, '⧉'),
+        h('button', {class:'btn icon', title:'Move up', onclick:()=>moveItem(it.id, -1)}, '↑'),
+        h('button', {class:'btn icon', title:'Move down', onclick:()=>moveItem(it.id, 1)}, '↓'),
+        h('button', {class:'btn danger icon', title:'Delete', onclick:()=>deleteItem(it.id)}, '🗑')
+      ]),
+      // meta editor
+      h('div', {class:'meta-edit'}, [
+        field('ID', it.id, v=>{ it.id = v; refresh(); }),
+        field('Group', it.group||'', v=>{ it.group = v; refresh(); }),
+        field('Label', it.label||'', v=>{ it.label = v; refresh(); }),
+        field('Item help', it.help||'', v=>{ it.help = v; refresh(); }, {textarea:true, cls:'full'})
+      ])
+    ])
+  ]);
+
+  // Right (tier editor)
+  const right = h('div', {class:'right'}, [
+    // Kind row
+    h('div', {class:'row'}, [
+      spanK('Kind'),
+      sel(['single','flag','select'], cfg.kind||'single', v=>{
+        it.perTier[tier] = coerceKind(cfg, v);
+        refresh();
+      }),
+      h('span', {class:'mini'}, `Tier: ${tier}`)
+    ]),
+    // Kind-specific editor
+    buildKindEditor(it, tier),
+    // Item-level requires
+    h('div', {class:'row', style:'margin-top:6px'}, [
+      spanK('Requires (item-level)'),
+      h('span', {class:'requires-pill'}, cfg.requires ? summarizeReq(cfg.requires) : '— none —'),
+      h('button', {class:'btn icon', title:'Edit requires', onclick:(e)=>{
+        const pane = e.currentTarget.closest('.item').querySelector('.req-editor.item');
+        pane.classList.toggle('show');
+      }}, '✎')
+    ]),
+    h('div', {class:'req-editor item'}, [
+      reqEditor(cfg.requires||null, newReq=>{
+        if(newReq===null) delete cfg.requires; else cfg.requires = newReq;
+        refresh();
+      })
+    ])
+  ]);
+
+  const card = h('article', {class:'item'}, [left, right]);
+  return card;
+}
+
+function field(label, value, oninput, opts={}){
+  const wrap = h('div', {class: opts.cls||''}, [
+    h('label', {class:'k'}, label),
+    opts.textarea
+      ? (()=>{ const ta = h('textarea', {}); ta.value = value||''; ta.oninput = ()=>oninput(ta.value); return ta; })()
+      : (()=>{ const inp = h('input', {type:'text'}); inp.value=value||''; inp.oninput=()=>oninput(inp.value); return inp; })()
+  ]);
+  return wrap;
+}
+function spanK(text){ return h('span', {class:'k'}, text); }
+function sel(options, value, onChange){
+  const s = h('select', {});
+  options.forEach(o => s.appendChild(h('option', {value:String(o)}, String(o))));
+  s.value = String(value);
+  s.onchange = e => onChange(e.target.value);
+  return s;
+}
+
+/* ========= Kind editors (single/flag/select) ========= */
+function coerceKind(cfg, k){
+  if(k===cfg.kind) return cfg;
+  if(k==='single') return {kind:'single', text:'', help:cfg.help||'', requires:cfg.requires||undefined};
+  if(k==='flag')   return {kind:'flag', available:false, help:cfg.help||'', requires:cfg.requires||undefined};
+  if(k==='select') return {kind:'select', options:[{value:'opt1', label:'Option 1', help:''}], default:'opt1', help:cfg.help||'', requires:cfg.requires||undefined};
+  return cfg;
+}
+
+function buildKindEditor(it, tier){
+  const cfg = it.perTier[tier] || {kind:'single', text:''};
+  if(cfg.kind==='single'){
+    const text = field('Text (fixed value)', cfg.text||'', v=>{ cfg.text=v; save(); });
+    const help = field('Tier help (optional)', cfg.help||'', v=>{ cfg.help=v; save(); });
+    return h('div', {}, [text, help]);
+  }
+  if(cfg.kind==='flag'){
+    const avail = h('div', {class:'row'}, [
+      spanK('Availability'),
+      sel(['Included','Not included'], cfg.available ? 'Included' : 'Not included', v=>{ cfg.available = (v==='Included'); save(); })
+    ]);
+    const help = field('Tier help (optional)', cfg.help||'', v=>{ cfg.help=v; save(); });
+    return h('div', {}, [avail, help]);
+  }
+  // select
+  const table = h('div', {class:'table'});
+  const header = h('header', {}, [h('div',{},'Value'), h('div',{},'Label'), h('div',{},'Help'), h('div',{},'Requires (JSON5)'), h('div',{},'Order')]);
+  const rows = h('div', {});
+  (cfg.options||[]).forEach((opt, idx)=>{
+    const val = h('input', {type:'text'}); val.value = String(opt.value ?? '');
+    val.oninput = ()=>{ opt.value = val.value; save(); };
+    const lab = h('input', {type:'text'}); lab.value = String(opt.label ?? '');
+    lab.oninput = ()=>{ opt.label = lab.value; save(); };
+    const hp = h('input', {type:'text'}); hp.value = String(opt.help ?? '');
+    hp.oninput = ()=>{ opt.help = hp.value; save(); };
+
+    const reqMini = reqMiniEditor(opt.requires||null, newReq=>{
+      if(newReq===null) delete opt.requires; else opt.requires = newReq; save();
+    });
+
+    const up = h('button', {class:'btn icon', title:'Up', disabled: idx===0, onclick:()=>{ swap(cfg.options, idx-1, idx); refresh(); }}, '↑');
+    const dn = h('button', {class:'btn icon', title:'Down', disabled: idx===cfg.options.length-1, onclick:()=>{ swap(cfg.options, idx, idx+1); refresh(); }}, '↓');
+    const rm = h('button', {class:'btn danger icon', title:'Remove', onclick:()=>{
+      cfg.options.splice(idx,1);
+      if(String(cfg.default)===String(opt.value)){ cfg.default = cfg.options[0]?.value ?? ''; }
+      refresh();
+    }}, '🗑');
+
+    rows.appendChild(h('div', {class:'row', style:'display:grid;grid-template-columns:150px 1fr 1fr 1fr 110px;gap:8px;padding:8px;border-bottom:1px solid var(--line)'}, [
+      h('div', {}, [val]),
+      h('div', {}, [lab]),
+      h('div', {}, [hp]),
+      h('div', {}, [reqMini]),
+      h('div', {class:'row'}, [up,dn,rm])
+    ]));
+  });
+  table.appendChild(header); table.appendChild(rows);
+
+  const add = h('button', {class:'btn', onclick:()=>{
+    cfg.options = cfg.options || [];
+    let n = cfg.options.length + 1;
+    const used = new Set(cfg.options.map(o=>String(o.value)));
+    while(used.has('option'+n)) n++;
+    cfg.options.push({value:'option'+n, label:'Option '+n, help:''});
+    if(!cfg.default) cfg.default = cfg.options[0]?.value ?? '';
+    refresh();
+  }}, 'Add option');
+
+  const def = sel((cfg.options||[]).map(o=>String(o.value)), String(cfg.default ?? (cfg.options?.[0]?.value ?? '')), v=>{ cfg.default = v; save(); });
+
+  const help = field('Tier help (optional)', cfg.help||'', v=>{ cfg.help=v; save(); });
+  return h('div', {}, [
+    h('div', {class:'row'}, [spanK('Default'), def, h('span',{class:'mini'}, 'Must match an option value')]),
+    table,
+    h('div', {class:'row', style:'margin-top:8px'}, [add]),
+    help
+  ]);
+}
+
+/* ========= Requires editors ========= */
+function summarizeReq(cl){
+  try{
+    if(cl.allOf) return `allOf(${cl.allOf.length})`;
+    if(cl.anyOf) return `anyOf(${cl.anyOf.length})`;
+    if(cl.not) return `not(...)`;
+    if(cl.id && cl.op) return `${cl.id} ${cl.op}${('value' in cl)?' '+short(JSON.stringify(cl.value)) : ''}`;
+  }catch(e){}
+  return 'invalid';
+}
+function short(s){ return s.length>24? (s.slice(0,21)+'…') : s; }
+
+function reqEditor(initial, onApply){
+  const ta = h('textarea', {placeholder:`JSON5 clause, e.g.\n{ id: "group1:feature1", op: "eq", value: "opt2" }\n{ allOf: [ {id:"a",op:"truthy"}, {id:"b",op:"gte",value:3} ] }`});
+  ta.value = initial ? JSON.stringify(initial, null, 2) : '';
+  const msg = h('div', {class:'mini'});
+  const btn = h('button', {class:'btn', onclick:()=>{
+    const v = ta.value.trim();
+    if(!v){ msg.textContent='(removed)'; onApply(null); return; }
+    try{
+      const parsed = JSON5.parse(v);
+      const errs = validateClause(parsed, new Set(state.catalog.items.map(i=>i.id)));
+      if(errs.length){ msg.innerHTML = '<span class="err">'+errs.join('; ')+'</span>'; }
+      else { msg.innerHTML = '<span class="ok">Clause valid</span>'; onApply(parsed); }
+    }catch(e){ msg.innerHTML = '<span class="err">Parse error: '+(e.message||e)+'</span>'; }
+  }}, 'Apply');
+  return h('div', {}, [ta, h('div',{class:'row',style:'margin-top:6px'},[btn,msg])]);
+}
+function reqMiniEditor(initial, onApply){
+  const ta = h('textarea'); ta.style.minHeight='60px'; ta.placeholder='{ id:"...", op:"eq", value:"..." }';
+  ta.value = initial ? JSON.stringify(initial) : '';
+  const btn = h('button', {class:'btn', onclick:()=>{
+    const v=ta.value.trim();
+    if(!v){ onApply(null); return; }
+    try{
+      const parsed=JSON5.parse(v);
+      const errs=validateClause(parsed, new Set(state.catalog.items.map(i=>i.id)));
+      if(errs.length) alert('Clause issues: '+errs.join('; '));
+      else onApply(parsed);
+    }catch(e){ alert('Parse error: '+(e.message||e)); }
+  }}, 'Apply');
+  return h('div', {}, [ta, h('div',{class:'row',style:'margin-top:6px'},[btn])]);
+}
+
+/* ========= Validation ========= */
+function validateCatalog(cat){
+  const errors=[]; const warn=[];
+  if(!cat || typeof cat!=='object') errors.push(['$', 'Catalog must be an object']);
+  if(typeof cat.name!=='string') errors.push(['name','name must be a string']);
+  if(typeof cat.version!=='string') errors.push(['version','version must be a string']);
+  if(!Array.isArray(cat.items)) errors.push(['items','items must be an array']);
+  if(errors.length) return {errors,warnings:warn};
+
+  const ids = new Set();
+  (cat.items||[]).forEach((it, i)=>{
+    if(typeof it.id!=='string' || !it.id.trim()) errors.push([`items[${i}].id`, 'id must be non-empty string']);
+    if(ids.has(it.id)) errors.push([`items[${i}].id`, 'duplicate id']);
+    ids.add(it.id);
+    if(typeof it.group!=='string') warn.push([`items[${i}].group`, 'group should be string']);
+    if(typeof it.label!=='string') warn.push([`items[${i}].label`, 'label should be string']);
+    if(it.help!=null && typeof it.help!=='string') warn.push([`items[${i}].help`, 'help should be string']);
+
+    TIERS.forEach(t=>{
+      const cfg = it.perTier?.[t];
+      if(!cfg){ errors.push([`items[${i}].perTier.${t}`,'missing tier config']); return; }
+      if(!['single','flag','select'].includes(cfg.kind)) errors.push([`items[${i}].perTier.${t}.kind`, 'kind must be single|flag|select']);
+
+      if(cfg.requires!=null){
+        validateClause(cfg.requires, ids).forEach(msg=>errors.push([`items[${i}].perTier.${t}.requires`, msg]));
+      }
+      if(cfg.kind==='single'){
+        if(typeof cfg.text!=='string') errors.push([`items[${i}].perTier.${t}.text`, 'text must be string']);
+        if(cfg.help!=null && typeof cfg.help!=='string') warn.push([`items[${i}].perTier.${t}.help`, 'help should be string']);
+      } else if(cfg.kind==='flag'){
+        if(typeof cfg.available!=='boolean') errors.push([`items[${i}].perTier.${t}.available`, 'available must be boolean']);
+        if(cfg.help!=null && typeof cfg.help!=='string') warn.push([`items[${i}].perTier.${t}.help`, 'help should be string']);
+      } else if(cfg.kind==='select'){
+        if(!Array.isArray(cfg.options) || !cfg.options.length) errors.push([`items[${i}].perTier.${t}.options`, 'options must be non-empty array']);
+        else{
+          const seen = new Set();
+          cfg.options.forEach((o, j)=>{
+            if(typeof o!=='object') errors.push([`items[${i}].perTier.${t}.options[${j}]`, 'option must be object']);
+            if(o.value==null) errors.push([`items[${i}].perTier.${t}.options[${j}].value`, 'value required']);
+            const sval = String(o.value);
+            if(seen.has(sval)) errors.push([`items[${i}].perTier.${t}.options[${j}].value`, 'duplicate option value']);
+            seen.add(sval);
+            if(o.label!=null && typeof o.label!=='string') warn.push([`items[${i}].perTier.${t}.options[${j}].label`, 'label should be string']);
+            if(o.help!=null && typeof o.help!=='string') warn.push([`items[${i}].perTier.${t}.options[${j}].help`, 'help should be string']);
+            if(o.requires!=null){
+              validateClause(o.requires, ids).forEach(msg=>errors.push([`items[${i}].perTier.${t}.options[${j}].requires`, msg]));
+            }
+          });
+          if(cfg.default!=null){
+            const ok = cfg.options.some(o => String(o.value)===String(cfg.default));
+            if(!ok) errors.push([`items[${i}].perTier.${t}.default`, 'default must match an option value']);
+          } else {
+            warn.push([`items[${i}].perTier.${t}.default`, 'default not set (UI uses first option)']);
+          }
+        }
+        if(cfg.help!=null && typeof cfg.help!=='string') warn.push([`items[${i}].perTier.${t}.help`, 'help should be string']);
+      }
+    });
+  });
+
+  // default viability per tier
+  defaultViability(cat).forEach(w => warn.push(w));
+  return {errors,warnings:warn};
+}
+
+function validateClause(cl, idSet){
+  const errs=[];
+  function rec(node, path){
+    if(node==null || typeof node!=='object'){ errs.push(`${path}: must be object`); return; }
+    if('allOf' in node){ if(!Array.isArray(node.allOf)||!node.allOf.length) errs.push(`${path}.allOf must be non-empty array`); else node.allOf.forEach((c,i)=>rec(c, `${path}.allOf[${i}]`)); return; }
+    if('anyOf' in node){ if(!Array.isArray(node.anyOf)||!node.anyOf.length) errs.push(`${path}.anyOf must be non-empty array`); else node.anyOf.forEach((c,i)=>rec(c, `${path}.anyOf[${i}]`)); return; }
+    if('not' in node){ rec(node.not, `${path}.not`); return; }
+    if(typeof node.id!=='string' || !node.id) errs.push(`${path}.id missing or not string`);
+    else if(idSet && !idSet.has(node.id)) errs.push(`${path}.id references unknown item "${node.id}"`);
+    if(typeof node.op!=='string' || !OPS.includes(node.op)) errs.push(`${path}.op must be one of ${OPS.join(', ')}`);
+    if(['truthy','falsy'].includes(node.op)){ if('value' in node) errs.push(`${path}.value must not be present for ${node.op}`); }
+    else if(['in','nin'].includes(node.op)){ if(!Array.isArray(node.value)) errs.push(`${path}.value must be an array for ${node.op}`); }
+    else { if(!('value' in node)) errs.push(`${path}.value required for ${node.op}`);
+           if(['gt','gte','lt','lte'].includes(node.op)){ const n = Number(node.value); if(!Number.isFinite(n)) errs.push(`${path}.value should be numeric for ${node.op}`); } }
+  }
+  rec(cl,'$'); return errs;
+}
+
+function defaultViability(cat){
+  const warns=[];
+  TIERS.forEach(tier=>{
+    const values={};
+    cat.items.forEach(it=>{
+      const cfg = it.perTier?.[tier];
+      if(!cfg) return;
+      if(cfg.kind==='single') values[it.id]=cfg.text ?? null;
+      if(cfg.kind==='flag') values[it.id]=!!cfg.available;
+      if(cfg.kind==='select'){
+        const dv = cfg.default!=null? cfg.default : (cfg.options?.[0]?.value);
+        values[it.id] = dv!=null? String(dv): null;
+      }
+    });
+    cat.items.forEach(it=>{
+      const cfg = it.perTier?.[tier]; if(!cfg) return;
+      let req = cfg.requires || null;
+      if(cfg.kind==='select'){
+        const cur = values[it.id];
+        const opt = (cfg.options||[]).find(o=>String(o.value)===String(cur));
+        if(opt && opt.requires) req = opt.requires;
+      }
+      if(req && !evalClause(req, values)){
+        warns.push([`defaults(${tier}).${it.id}`, 'Default selection does not meet its requires']);
+      }
+    });
+  });
+  return warns;
+}
+
+function evalClause(cl, values){
+  if(!cl || typeof cl!=='object') return true;
+  if(cl.allOf) return cl.allOf.every(x=>evalClause(x,values));
+  if(cl.anyOf) return cl.anyOf.some(x=>evalClause(x,values));
+  if(cl.not) return !evalClause(cl.not, values);
+  const left = values[cl.id];
+  switch(cl.op){
+    case 'truthy': return !!left;
+    case 'falsy': return !left;
+    case 'eq': return String(left)===String(cl.value);
+    case 'neq': return String(left)!==String(cl.value);
+    case 'in': return Array.isArray(cl.value) && cl.value.map(String).includes(String(left));
+    case 'nin': return Array.isArray(cl.value) && !cl.value.map(String).includes(String(left));
+    case 'gt': return Number(left) > Number(cl.value);
+    case 'gte': return Number(left) >= Number(cl.value);
+    case 'lt': return Number(left) < Number(cl.value);
+    case 'lte': return Number(left) <= Number(cl.value);
+    default: return true;
+  }
+}
+
+/* ========= Actions ========= */
+function refresh(){ save(); render(); }
+function addItem(){
+  const item = blankItem();
+  // ensure unique id
+  const used = new Set(state.catalog.items.map(i=>i.id));
+  let base='group1:feature'; let n=state.catalog.items.length+1;
+  while(used.has(base+n)) n++;
+  item.id = base+n; item.label = 'Feature '+n; item.group = 'Group '+Math.ceil(n/3);
+  state.catalog.items.push(item);
+  refresh();
+}
+function deleteItem(id){
+  if(!confirm('Delete this item?')) return;
+  const idx = state.catalog.items.findIndex(i=>i.id===id);
+  if(idx>=0){ state.catalog.items.splice(idx,1); refresh(); }
+}
+function duplicateItem(id){
+  const idx = state.catalog.items.findIndex(i=>i.id===id);
+  if(idx<0) return;
+  const clone = deep(state.catalog.items[idx]);
+  let base = clone.id+'_copy'; let k=1;
+  const used = new Set(state.catalog.items.map(i=>i.id));
+  while(used.has(base+(k>1?k:''))) k++;
+  clone.id = base+(k>1?k:'');
+  state.catalog.items.splice(idx+1,0,clone);
+  refresh();
+}
+function moveItem(id, delta){
+  const a = state.catalog.items;
+  const i = a.findIndex(x=>x.id===id); if(i<0) return;
+  const j = i+delta; if(j<0 || j>=a.length) return;
+  [a[i],a[j]] = [a[j],a[i]];
+  refresh();
+}
+function swap(arr,i,j){ if(i<0||j<0||i>=arr.length||j>=arr.length) return; [arr[i],arr[j]]=[arr[j],arr[i]]; }
+
+/* ========= Groups ========= */
+function groupOrder(){
+  const seen=new Set(); const order=[];
+  (state.catalog.items||[]).forEach(it=>{ const g=it.group||'Other'; if(!seen.has(g)){ seen.add(g); order.push(g);} });
+  return order;
+}
+function itemsByGroup(g){
+  return (state.catalog.items||[]).filter(it=>(it.group||'Other')===g);
+}
+
+/* ========= Import / Export ========= */
+async function importFromUrl(){
+  const u = prompt('Enter catalog URL (raw JSON/JSON5):'); if(!u) return;
+  try{
+    const res = await fetch(u, {cache:'no-store'});
+    const text = await res.text();
+    const parsed = JSON5.parse(text);
+    state.catalog = coerceCatalog(parsed);
+    refresh(); runValidation();
+  }catch(e){ alert('Failed to fetch/parse: '+(e.message||e)); }
+}
+function importFromFile(file){
+  const fr = new FileReader();
+  fr.onload = ()=>{
+    try{
+      const parsed = JSON5.parse(String(fr.result));
+      state.catalog = coerceCatalog(parsed);
+      refresh(); runValidation();
+    }catch(e){ alert('Parse error: '+(e.message||e)); }
+  };
+  fr.readAsText(file);
+}
+function downloadJson(){
+  const blob = new Blob([nice(state.catalog)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='catalog.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+function openInConfigurator(){
+  const pub = $('#publicUrl').value.trim();
+  if(!pub){ alert('Provide a public URL where this JSON will be hosted first.'); return; }
+  const target = `https://2i2c.org/hub-configurator/?catalog=${encodeURIComponent(pub)}`;
+  window.open(target, '_blank');
+}
+function coerceCatalog(x){
+  const cat = { name:String(x.name ?? 'Unnamed Catalog'), version:String(x.version ?? '0.0'), items:[] };
+  if(Array.isArray(x.items)){
+    x.items.forEach(raw=>{
+      const it = {
+        id: String(raw.id ?? ''),
+        group: String(raw.group ?? 'Other'),
+        label: String(raw.label ?? raw.id ?? 'Item'),
+        help: raw.help!=null ? String(raw.help) : '',
+        perTier: {}
+      };
+      TIERS.forEach(t=>{
+        const cfg = raw.perTier?.[t] || {kind:'single', text:''};
+        if(cfg.kind==='single'){
+          it.perTier[t] = {kind:'single', text:String(cfg.text ?? ''), help:cfg.help!=null?String(cfg.help):'', requires:cfg.requires||undefined};
+        } else if(cfg.kind==='flag'){
+          it.perTier[t] = {kind:'flag', available:!!cfg.available, help:cfg.help!=null?String(cfg.help):'', requires:cfg.requires||undefined};
+        } else {
+          const opts = (cfg.options||[]).map(o => typeof o==='string'
+            ? {value:String(o), label:String(o), help:''}
+            : { value:String(o.value), label:String(o.label ?? o.value), help:String(o.help ?? ''), requires:o.requires||undefined });
+          it.perTier[t] = {kind:'select', options:opts, default: cfg.default!=null? String(cfg.default) : (opts[0]?.value ?? ''), help:cfg.help!=null?String(cfg.help):'', requires:cfg.requires||undefined};
+        }
+      });
+      cat.items.push(it);
+    });
+  }
+  return cat;
+}
+
+/* ========= Validation UI ========= */
+function runValidation(){
+  const {errors,warnings} = validateCatalog(state.catalog);
+  const box = $('#errors'); box.innerHTML='';
+  const sum = $('#valSummary');
+  if(!errors.length && !warnings.length){
+    sum.innerHTML = '<span class="ok">No issues found</span>';
+    return;
+  }
+  sum.textContent = `${errors.length} error(s) • ${warnings.length} warning(s)`;
+  [...errors, ...warnings].forEach(([where,msg])=>{
+    const row = h('div', {class:'errorRow'}, [h('div',{class:'where'}, where), h('div',{}, msg)]);
+    box.appendChild(row);
+  });
+}
+
+/* ========= Boot & bindings ========= */
+function boot(){
+  load();
+  // tier tabs
+  $$('.tier-btn').forEach(btn=>{
+    btn.onclick = ()=>{
+      $$('.tier-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeTier = btn.getAttribute('data-tier');
+      render();
+    };
+  });
+
+  // global inputs
+  $('#catName').oninput = ()=>{ state.catalog.name = $('#catName').value; save(); };
+  $('#catVersion').oninput = ()=>{ state.catalog.version = $('#catVersion').value; save(); };
+
+  // buttons
+  $('#newBtn').onclick = ()=>{ if(confirm('Start a new blank catalog?')){ state.catalog = blankCatalog(); render(); runValidation(); save(); } };
+  $('#importUrlBtn').onclick = importFromUrl;
+  $('#fileInput').onchange = (e)=>{ const f=e.target.files[0]; if(f) importFromFile(f); e.target.value=''; };
+  $('#validateBtn').onclick = runValidation;
+  $('#runFullValidation').onclick = runValidation;
+  $('#downloadBtn').onclick = downloadJson;
+  $('#copyBtn').onclick = ()=>copy(nice(state.catalog));
+  $('#addItemBtn').onclick = addItem;
+  $('#openConfiguratorBtn').onclick = openInConfigurator;
+
+  render();
+  runValidation();
+}
+if(document.readyState==='loading') window.addEventListener('DOMContentLoaded', boot); else boot();
+</script>
+</body>
+</html>
