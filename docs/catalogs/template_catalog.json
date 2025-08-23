@@ -1,0 +1,332 @@
+{
+  "name": "Demo Catalog Template — Full Feature Showcase",
+  "version": "2025.08.23",
+  "items": [
+    {
+      "id": "group1:feature1",
+      "group": "Group 1",
+      "label": "Feature 1 (Mode)",
+      "help": "Choose the overall operating mode. Higher modes unlock additional features.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "opt1", "label": "Option 1", "help": "Baseline capability suitable for pilots." },
+            { "value": "opt2", "label": "Option 2", "help": "Adds a few advanced behaviors." }
+          ],
+          "default": "opt1"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "opt1", "label": "Option 1", "help": "Baseline capability suitable for pilots." },
+            { "value": "opt2", "label": "Option 2", "help": "Adds a few advanced behaviors." },
+            { "value": "opt3", "label": "Option 3", "help": "Enables advanced workflows; requires the Switch in Feature 2.", "requires": { "id": "group1:feature2", "op": "truthy" } }
+          ],
+          "default": "opt2"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "opt1", "label": "Option 1", "help": "Baseline capability suitable for pilots." },
+            { "value": "opt2", "label": "Option 2", "help": "Adds a few advanced behaviors." },
+            { "value": "opt3", "label": "Option 3", "help": "Enables advanced workflows; requires the Switch in Feature 2.", "requires": { "id": "group1:feature2", "op": "truthy" } },
+            { "value": "opt4", "label": "Option 4 (experimental)", "help": "Highest capability; needs the Switch and Scale ≥ 3.", "requires": { "allOf": [ { "id": "group1:feature2", "op": "truthy" }, { "id": "group2:feature4", "op": "gte", "value": 3 } ] } }
+          ],
+          "default": "opt3"
+        }
+      }
+    },
+
+    {
+      "id": "group1:feature2",
+      "group": "Group 1",
+      "label": "Feature 2 (Switch)",
+      "help": "Master on/off switch that unlocks certain modes and backends.",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": false, "help": "Not included in Essential." },
+        "Advanced":  { "kind": "flag", "available": true,  "help": "Included in Advanced." },
+        "Premier":   { "kind": "flag", "available": true,  "help": "Included in Premier." }
+      }
+    },
+
+    {
+      "id": "group1:feature3",
+      "group": "Group 1",
+      "label": "Feature 3 (Plan)",
+      "help": "Fixed descriptive value to illustrate single-value items.",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "basic plan",    "help": "Fixed for Essential." },
+        "Advanced":  { "kind": "single", "text": "standard plan", "help": "Fixed for Advanced." },
+        "Premier":   { "kind": "single", "text": "premium plan",  "help": "Fixed for Premier." }
+      }
+    },
+
+    {
+      "id": "group2:feature4",
+      "group": "Group 2",
+      "label": "Feature 4 (Scale)",
+      "help": "A numeric-like choice to demonstrate comparisons in dependencies.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "1", "label": "Scale 1", "help": "Smallest footprint." },
+            { "value": "3", "label": "Scale 3", "help": "Moderate footprint." },
+            { "value": "5", "label": "Scale 5", "help": "Largest footprint." }
+          ],
+          "default": "1"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "1", "label": "Scale 1", "help": "Smallest footprint." },
+            { "value": "3", "label": "Scale 3", "help": "Moderate footprint." },
+            { "value": "5", "label": "Scale 5", "help": "Largest footprint." }
+          ],
+          "default": "3"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "1", "label": "Scale 1", "help": "Smallest footprint." },
+            { "value": "3", "label": "Scale 3", "help": "Moderate footprint." },
+            { "value": "5", "label": "Scale 5", "help": "Largest footprint." }
+          ],
+          "default": "5"
+        }
+      }
+    },
+
+    {
+      "id": "group2:feature5",
+      "group": "Group 2",
+      "label": "Feature 5 (Addon)",
+      "help": "An optional addon that’s only sensible at larger scale.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "requires": { "id": "group2:feature4", "op": "gte", "value": 3 },
+          "options": [
+            { "value": "addonA", "label": "Addon A", "help": "Basic addon." },
+            { "value": "addonB", "label": "Addon B", "help": "Enhanced addon." }
+          ],
+          "default": "addonA"
+        },
+        "Advanced": {
+          "kind": "select",
+          "requires": { "id": "group2:feature4", "op": "gte", "value": 3 },
+          "options": [
+            { "value": "addonA", "label": "Addon A", "help": "Basic addon." },
+            { "value": "addonB", "label": "Addon B", "help": "Enhanced addon." }
+          ],
+          "default": "addonA"
+        },
+        "Premier": {
+          "kind": "select",
+          "requires": { "id": "group2:feature4", "op": "gte", "value": 3 },
+          "options": [
+            { "value": "addonA", "label": "Addon A", "help": "Basic addon." },
+            { "value": "addonB", "label": "Addon B", "help": "Enhanced addon." }
+          ],
+          "default": "addonB"
+        }
+      }
+    },
+
+    {
+      "id": "group2:feature6",
+      "group": "Group 2",
+      "label": "Feature 6 (Backend)",
+      "help": "Backend engine. Some choices need higher mode or the Switch.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "alpha", "label": "Alpha", "help": "Default backend optimized for stability." },
+            { "value": "beta",  "label": "Beta",  "help": "Newer backend; mildly experimental." }
+          ],
+          "default": "alpha"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "alpha", "label": "Alpha", "help": "Default backend optimized for stability." },
+            { "value": "beta",  "label": "Beta",  "help": "Newer backend; mildly experimental." },
+            { "value": "gamma", "label": "Gamma", "help": "Advanced backend; needs Mode ≥ 3 or the Switch.", "requires": { "anyOf": [ { "id": "group1:feature1", "op": "in", "value": ["opt3","opt4"] }, { "id": "group1:feature2", "op": "truthy" } ] } }
+          ],
+          "default": "beta"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "alpha", "label": "Alpha", "help": "Default backend optimized for stability." },
+            { "value": "beta",  "label": "Beta",  "help": "Newer backend; mildly experimental." },
+            { "value": "gamma", "label": "Gamma", "help": "Advanced backend; needs Mode ≥ 3 or the Switch.", "requires": { "anyOf": [ { "id": "group1:feature1", "op": "in", "value": ["opt3","opt4"] }, { "id": "group1:feature2", "op": "truthy" } ] } }
+          ],
+          "default": "gamma"
+        }
+      }
+    },
+
+    {
+      "id": "group3:feature7",
+      "group": "Group 3",
+      "label": "Feature 7 (Storage)",
+      "help": "Choose whether data persists across sessions.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "ephemeral",  "label": "Ephemeral",  "help": "Temporary; may reset on rebuild." },
+            { "value": "persistent", "label": "Persistent", "help": "Retained across restarts." }
+          ],
+          "default": "ephemeral"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "ephemeral",  "label": "Ephemeral",  "help": "Temporary; may reset on rebuild." },
+            { "value": "persistent", "label": "Persistent", "help": "Retained across restarts." }
+          ],
+          "default": "persistent"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "ephemeral",  "label": "Ephemeral",  "help": "Temporary; may reset on rebuild." },
+            { "value": "persistent", "label": "Persistent", "help": "Retained across restarts." }
+          ],
+          "default": "persistent"
+        }
+      }
+    },
+
+    {
+      "id": "group3:feature8",
+      "group": "Group 3",
+      "label": "Feature 8 (Backups)",
+      "help": "Automated snapshots. Only sensible with persistent storage.",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": false, "help": "Not included in Essential.", "requires": { "id": "group3:feature7", "op": "eq", "value": "persistent" } },
+        "Advanced":  { "kind": "flag", "available": true,  "help": "Included in Advanced.",     "requires": { "id": "group3:feature7", "op": "eq", "value": "persistent" } },
+        "Premier":   { "kind": "flag", "available": true,  "help": "Included in Premier.",      "requires": { "id": "group3:feature7", "op": "eq", "value": "persistent" } }
+      }
+    },
+
+    {
+      "id": "group3:feature9",
+      "group": "Group 3",
+      "label": "Feature 9 (High Availability)",
+      "help": "Redundancy and failover. Needs sufficient Scale.",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": false, "help": "Not included in Essential.", "requires": { "id": "group2:feature4", "op": "gte", "value": 3 } },
+        "Advanced":  { "kind": "flag", "available": true,  "help": "Included in Advanced.",     "requires": { "id": "group2:feature4", "op": "gte", "value": 3 } },
+        "Premier":   { "kind": "flag", "available": true,  "help": "Included in Premier.",      "requires": { "id": "group2:feature4", "op": "gte", "value": 3 } }
+      }
+    },
+
+    {
+      "id": "group3:feature10",
+      "group": "Group 3",
+      "label": "Feature 10 (UI Theme)",
+      "help": "Cosmetic setting with some constraints to demo NOT/ANYOF.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "default", "label": "Default", "help": "Standard appearance." },
+            { "value": "contrast", "label": "High Contrast", "help": "Improved readability; not available with experimental Mode.", "requires": { "not": { "id": "group1:feature1", "op": "eq", "value": "opt4" } } }
+          ],
+          "default": "default"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "default", "label": "Default", "help": "Standard appearance." },
+            { "value": "contrast", "label": "High Contrast", "help": "Improved readability; not available with experimental Mode.", "requires": { "not": { "id": "group1:feature1", "op": "eq", "value": "opt4" } } },
+            { "value": "custom", "label": "Custom", "help": "Upload or define a theme; needs Switch or HA.", "requires": { "anyOf": [ { "id": "group1:feature2", "op": "truthy" }, { "id": "group3:feature9", "op": "truthy" } ] } }
+          ],
+          "default": "default"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "default", "label": "Default", "help": "Standard appearance." },
+            { "value": "contrast", "label": "High Contrast", "help": "Improved readability; not available with experimental Mode.", "requires": { "not": { "id": "group1:feature1", "op": "eq", "value": "opt4" } } },
+            { "value": "custom", "label": "Custom", "help": "Upload or define a theme; needs Switch or HA.", "requires": { "anyOf": [ { "id": "group1:feature2", "op": "truthy" }, { "id": "group3:feature9", "op": "truthy" } ] } }
+          ],
+          "default": "custom"
+        }
+      }
+    },
+
+    {
+      "id": "group4:feature11",
+      "group": "Group 4",
+      "label": "Feature 11 (Auth Method)",
+      "help": "Demonstrates an allOf dependency mixing boolean and numeric comparisons.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "passwordless", "label": "Passwordless", "help": "Magic link style access." },
+            { "value": "password",     "label": "Password",     "help": "Standard username/password." }
+          ],
+          "default": "passwordless"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "passwordless", "label": "Passwordless", "help": "Magic link style access." },
+            { "value": "password",     "label": "Password",     "help": "Standard username/password." },
+            { "value": "custom",       "label": "Custom",       "help": "Custom auth; needs Switch ON and Scale ≥ 3.", "requires": { "allOf": [ { "id": "group1:feature2", "op": "truthy" }, { "id": "group2:feature4", "op": "gte", "value": 3 } ] } }
+          ],
+          "default": "password"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "passwordless", "label": "Passwordless", "help": "Magic link style access." },
+            { "value": "password",     "label": "Password",     "help": "Standard username/password." },
+            { "value": "custom",       "label": "Custom",       "help": "Custom auth; needs Switch ON and Scale ≥ 3.", "requires": { "allOf": [ { "id": "group1:feature2", "op": "truthy" }, { "id": "group2:feature4", "op": "gte", "value": 3 } ] } }
+          ],
+          "default": "custom"
+        }
+      }
+    },
+
+    {
+      "id": "group4:feature12",
+      "group": "Group 4",
+      "label": "Feature 12 (Docs Site)",
+      "help": "Ties multiple requirements together including equality checks.",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "static",      "label": "Static",      "help": "Simple, static site." },
+            { "value": "interactive", "label": "Interactive", "help": "Dynamic site; requires persistent storage and Addon B.", "requires": { "allOf": [ { "id": "group3:feature7", "op": "eq", "value": "persistent" }, { "id": "group2:feature5", "op": "eq", "value": "addonB" } ] } }
+          ],
+          "default": "static"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "static",      "label": "Static",      "help": "Simple, static site." },
+            { "value": "interactive", "label": "Interactive", "help": "Dynamic site; requires persistent storage and Addon B.", "requires": { "allOf": [ { "id": "group3:feature7", "op": "eq", "value": "persistent" }, { "id": "group2:feature5", "op": "eq", "value": "addonB" } ] } }
+          ],
+          "default": "static"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "static",      "label": "Static",      "help": "Simple, static site." },
+            { "value": "interactive", "label": "Interactive", "help": "Dynamic site; requires persistent storage and Addon B.", "requires": { "allOf": [ { "id": "group3:feature7", "op": "eq", "value": "persistent" }, { "id": "group2:feature5", "op": "eq", "value": "addonB" } ] } }
+          ],
+          "default": "interactive"
+        }
+      }
+    }
+  ]
+}

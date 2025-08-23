@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <title>2i2c Hub Configurator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!-- Inter to match 2i2c.org’s feel -->
+  <!-- Inter to echo 2i2c.org feel -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <!-- JSON5 for relaxed catalogs (comments, trailing commas) -->
   <script src="https://cdn.jsdelivr.net/npm/json5@2.2.3/dist/index.min.js" defer></script>
@@ -13,7 +13,6 @@
        2i2c-inspired Design Tokens
        ========================= */
     :root{
-      /* Brand core */
       --big-blue:#1D4EF5;   /* Primary */
       --pale-blue:#F2F5FC;  /* Light background */
       --midnight:#230344;   /* Deep contrast */
@@ -41,7 +40,6 @@
       --focus:0 0 0 3px rgba(29,78,245,0.25);
     }
 
-    /* Dark mode tuned to 2i2c’s deep purples/blues */
     @media (prefers-color-scheme: dark){
       :root{
         --bg: radial-gradient(1200px 700px at 20% -20%, rgba(184,107,252,0.10), transparent 60%),
@@ -72,7 +70,6 @@
 
     .app{max-width:1100px;margin:32px auto;padding:0 16px 64px}
 
-    /* Header with subtle 2i2c-ish gradient underline */
     header{
       display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px;
       padding-bottom:10px; border-bottom:1px solid var(--line);
@@ -147,6 +144,23 @@
     .k{opacity:.8; font-size:12px; color:var(--muted)}
     .kv{font-weight:700}
 
+    /* Inline, dynamic helper under controls */
+    .opthelp{
+      margin-top:8px;
+      font-size:12px;
+      line-height:1.4;
+      color: var(--muted);
+    }
+
+    /* Dependency notes under controls */
+    .depnote { margin-top:6px; font-size:12px; line-height:1.4; }
+    .depnote.bad {
+      color: var(--magenta);
+      border-left: 3px solid var(--magenta);
+      padding-left: 8px;
+    }
+    .depnote a { color: inherit; text-decoration: underline; }
+
     .footer{margin-top:24px; color:var(--muted); font-size:13px}
     .urlbox{
       margin-top:8px; display:flex; gap:8px; align-items:center; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:8px; box-shadow:var(--shadow)
@@ -159,7 +173,6 @@
 
     .sep{height:1px;background:var(--line);margin:14px 0}
 
-    /* Subtle hero tint behind page top, blends with brand gradient */
     .heroish{
       background:
         radial-gradient(800px 200px at 0% 0%, rgba(29,78,245,0.10), transparent 50%),
@@ -207,7 +220,7 @@
         <input id="shareUrl" type="text" readonly aria-label="Shareable URL" />
         <button id="copyUrl" class="btn" title="Copy URL to clipboard">Copy</button>
       </div>
-      <div class="hint">Tip: Load a different catalog with <span class="mono">?catalog=&lt;url&gt;</span>. Get machine-readable output with <span class="mono">?json=true</span>.</div>
+      <div class="hint">Params: <span class="mono">?catalog=&lt;url&gt;</span> • <span class="mono">?json=true</span> for machine-readable output.</div>
       <div class="sep"></div>
       <div class="hint">Field legend: <span class="pill">single</span> fixed; <span class="pill">flag</span> included/excluded; <span class="pill">select</span> your choice.</div>
     </div>
@@ -286,7 +299,12 @@
     switch(cfg.kind){
       case "single": return cfg.text ?? null;
       case "flag"  : return !!cfg.available;
-      case "select": return cfg.default ?? (cfg.options?.[0] ?? null);
+      case "select": {
+        // options are objects {value,label?,help?,requires?}
+        const opts = (cfg.options || []);
+        const dv = cfg.default ?? (opts[0]?.value ?? null);
+        return dv != null ? String(dv) : null;
+      }
       default: return null;
     }
   }
@@ -329,6 +347,90 @@
     return false;
   }
 
+  // -------- helpers: options, labels, dependencies --------
+  function normalizeOptions(opts){
+    // Enforce object shape; tolerate string as convenience (maps to {value,label})
+    return (opts || []).map(o => {
+      if (typeof o === 'string') return { value: String(o), label: String(o), help: '' };
+      return {
+        value: String(o.value),
+        label: String(o.label ?? o.value),
+        help:  String(o.help ?? ''),
+        requires: o.requires || null
+      };
+    });
+  }
+
+  function makeLabelIndex(catalog){
+    const idx = {};
+    catalog.forEach(it => { idx[it.id] = it.label || it.id; });
+    return idx;
+  }
+
+  function makeOptionLabelGetter(catalog, tier){
+    const map = {};
+    catalog.forEach(it => {
+      const cfg = it.perTier?.[tier];
+      if(cfg?.kind === 'select'){
+        normalizeOptions(cfg.options).forEach(o => {
+          map[it.id] = map[it.id] || {};
+          map[it.id][o.value] = o.label;
+        });
+      }
+    });
+    return (itemId, value) => map[itemId]?.[String(value)] || null;
+  }
+
+  function evalClause(cl, values){
+    if(!cl || typeof cl !== 'object') return true;
+    if(cl.allOf) return cl.allOf.every(c => evalClause(c, values));
+    if(cl.anyOf) return cl.anyOf.some(c => evalClause(c, values));
+    if(cl.not)   return !evalClause(cl.not, values);
+
+    const left = values?.[cl.id];
+    const op = cl.op || 'eq';
+    const v  = cl.value;
+
+    switch(op){
+      case 'truthy': return !!left;
+      case 'falsy':  return !left;
+      case 'eq':     return String(left) === String(v);
+      case 'neq':    return String(left) !== String(v);
+      case 'in':     return Array.isArray(v) && v.map(String).includes(String(left));
+      case 'nin':    return Array.isArray(v) && !v.map(String).includes(String(left));
+      case 'gt':     return Number(left) >  Number(v);
+      case 'gte':    return Number(left) >= Number(v);
+      case 'lt':     return Number(left) <  Number(v);
+      case 'lte':    return Number(left) <= Number(v);
+      default:       return false;
+    }
+  }
+
+  function describeClause(cl, labelById, optionLabelOf){
+    if(!cl) return '';
+    if(cl.allOf) return cl.allOf.map(c => describeClause(c, labelById, optionLabelOf)).join(' and ');
+    if(cl.anyOf) return cl.anyOf.map(c => describeClause(c, labelById, optionLabelOf)).join(' or ');
+    if(cl.not)   return 'not (' + describeClause(cl.not, labelById, optionLabelOf) + ')';
+
+    const field = labelById[cl.id] || cl.id;
+    const fmt = (val) => {
+      if (Array.isArray(val)) return val.map(v => optionLabelOf(cl.id, v) || v).join(', ');
+      return optionLabelOf(cl.id, val) || String(val);
+    };
+    const m = {eq:'=', neq:'≠', in:'∈', nin:'∉', gt:'>', gte:'≥', lt:'<', lte:'≤', truthy:'is set', falsy:'is not set'};
+    if(cl.op === 'truthy' || cl.op === 'falsy') return `${field} ${m[cl.op]}`;
+    return `${field} ${m[cl.op] || cl.op} ${fmt(cl.value)}`;
+  }
+
+  function collectReferencedIds(cl, acc=new Set()){
+    if(!cl || typeof cl !== 'object') return acc;
+    if(cl.allOf) cl.allOf.forEach(c => collectReferencedIds(c, acc));
+    else if(cl.anyOf) cl.anyOf.forEach(c => collectReferencedIds(c, acc));
+    else if(cl.not) collectReferencedIds(cl.not, acc);
+    else if(cl.id) acc.add(cl.id);
+    return acc;
+  }
+
   // -------- rendering --------
   function h(tag, attrs={}, children=[]){
     const el = document.createElement(tag);
@@ -358,52 +460,114 @@
     const grid = document.getElementById('grid');
     if(!grid) return;
     grid.innerHTML = '';
+
     const tier = appState.tier;
     ensureTierDefaults(tier);
+
+    const labelById = makeLabelIndex(appState.catalog);
+    const optionLabelOf = makeOptionLabelGetter(appState.catalog, tier);
+
     for(const [group, items] of appState.byGroup){
       grid.appendChild(h('div', {class:'group'}, [
         h('span', {}, group),
         h('div', {class:'line'})
       ]));
+
       items.forEach(item=>{
         const cfg = item.perTier?.[tier];
         if(!cfg){ return; }
-        const left = h('div', {class:'card'}, [
+
+        const left = h('div', {class:'card', id:`field-${item.id}`}, [
           h('div', {class:'label'}, item.label || item.id),
           item.help ? h('div', {class:'help'}, item.help) : null
         ]);
+
         let rightContent = null;
 
         if(cfg.kind === 'select'){
-          const opts = cfg.options || [];
-          const sel = h('select', { 'aria-label': item.label || item.id },
-            opts.map(o => {
-              const opt = h('option', {value: String(o)}, String(o));
-              if(String(appState.selections[tier][item.id]) === String(o)) opt.selected = true;
+          const norm = normalizeOptions(cfg.options);
+          const currentVal = String(appState.selections[tier][item.id] ?? cfg.default ?? (norm[0]?.value ?? ''));
+          const selId = `${item.id}-select`;
+          const helpId = `${item.id}-help`;
+
+          const sel = h('select', { id: selId, 'aria-label': item.label || item.id, 'aria-describedby': helpId },
+            norm.map(o => {
+              let lab = o.label;
+              if (o.requires) {
+                const reqText = describeClause(o.requires, labelById, optionLabelOf);
+                if (reqText) lab += ` (requires: ${reqText})`;
+              }
+              const opt = h('option', { value: o.value }, lab);
+              if (o.value === currentVal) opt.selected = true;
               return opt;
             })
           );
+
+          const helpTextFor = (val) => (norm.find(o => o.value === String(val))?.help || '').trim();
+          const helpDiv = h('div', { class: 'opthelp', id: helpId, 'aria-live': 'polite' },
+            helpTextFor(currentVal) || ' '
+          );
+
           sel.addEventListener('change', e=>{
             appState.selections[tier][item.id] = e.target.value;
+            helpDiv.textContent = helpTextFor(e.target.value) || ' ';
             encodeStateToUrl();
+            renderGrid(); // refresh dependency notes
           });
-          rightContent = sel;
+
+          rightContent = h('div', {}, [sel, helpDiv]);
+
         } else if (cfg.kind === 'single'){
-          rightContent = h('div', {class:'static', title:'Fixed for this tier'}, [
-            h('span', {class:'k'}, 'single'),
-            h('span', {class:'kv'}, appState.selections[tier][item.id] ?? cfg.text ?? '')
+          const fixedVal = appState.selections[tier][item.id] ?? cfg.text ?? '';
+          rightContent = h('div', {}, [
+            h('div', {class:'static', title:'Fixed for this tier'}, [
+              h('span', {class:'k'}, 'single'),
+              h('span', {class:'kv'}, fixedVal)
+            ]),
+            cfg.help ? h('div', {class:'opthelp'}, cfg.help) : null
           ]);
+
         } else if (cfg.kind === 'flag'){
           const on = !!cfg.available;
           appState.selections[tier][item.id] = on; // reflect catalog
-          rightContent = h('div', {class: 'badge ' + (on?'ok':'no'), title: on?'Included in this tier':'Not included in this tier'}, [
-            h('span', {class:'k'}, 'flag'),
-            h('span', {class:'kv'}, on ? 'Included' : 'Not included')
+          rightContent = h('div', {}, [
+            h('div', {class: 'badge ' + (on?'ok':'no'), title: on?'Included in this tier':'Not included in this tier'}, [
+              h('span', {class:'k'}, 'flag'),
+              h('span', {class:'kv'}, on ? 'Included' : 'Not included')
+            ]),
+            cfg.help ? h('div', {class:'opthelp'}, cfg.help) : null
           ]);
+
         } else {
           rightContent = h('div', {class:'static'}, 'Unsupported kind');
         }
 
+        // ----- Dependency evaluation and note (keep control visible) -----
+        let requirement = null;
+        if (cfg.kind === 'select') {
+          const opts = normalizeOptions(cfg.options);
+          const current = appState.selections[tier][item.id];
+          const currentOpt = opts.find(o => o.value === String(current));
+          requirement = currentOpt?.requires || cfg.requires || null;
+        } else {
+          requirement = cfg.requires || null;
+        }
+
+        if (requirement) {
+          const values = appState.selections[tier];
+          const ok = evalClause(requirement, values);
+          if (!ok) {
+            const needs = describeClause(requirement, labelById, optionLabelOf);
+            const ids = Array.from(collectReferencedIds(requirement));
+            const links = ids.map(id => `<a href="#field-${id}">${labelById[id] || id}</a>`);
+            const fixHint = links.length ? ` (jump to ${links.join(', ')})` : '';
+            const depHtml = `Requires: ${needs}${fixHint}`;
+            const note = h('div', {class:'depnote bad', role:'status', 'aria-live':'polite', html: depHtml});
+            rightContent = h('div', {}, [ rightContent, note ]);
+          }
+        }
+
+        // Append row
         grid.appendChild(left);
         grid.appendChild(h('div', {class:'right'}, rightContent));
       });
@@ -466,7 +630,7 @@
       document.body.innerHTML = "<pre style='white-space:pre-wrap; padding:16px; font-family:monospace; color:#b91c1c; background:#fff5f5; border:1px solid #fecaca; border-radius:12px; max-width:960px; margin:24px auto;'>"
         + "Failed to load catalog.\n\n"
         + String(err.message || err)
-        + "\n\nExpected shape:\n{\n  \"name\": \"...\",\n  \"version\": \"...\",\n  \"items\": [ /* ... */ ]\n}\n</pre>";
+        + "\n\nExpected shape:\n{\n  \"name\": \"...\",\n  \"version\": \"...\",\n  \"items\": [\n    {\n      \"id\": \"...\",\n      \"label\": \"...\",\n      \"help\": \"...\",\n      \"perTier\": {\n        \"Essential\": { \"kind\": \"select|flag|single\", ... },\n        \"Advanced\":  { ... },\n        \"Premier\":   { ... }\n      }\n    }\n  ]\n}\n</pre>";
       return;
     }
     setCatalogUiBits();

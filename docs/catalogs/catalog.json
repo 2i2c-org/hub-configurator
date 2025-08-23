@@ -1,549 +1,427 @@
 {
-  "name": "2i2c Hub Catalog",
-  "version": "2025.08.22",
+  "name": "2i2c Hub Catalog — Current (with helps & dependencies)",
+  "version": "2025.08.23",
   "items": [
     {
-        "id": "cluster:csp",
-        "group": "Cluster",
-        "label": "Cloud Service Provider",
-        "help": "Which cloud we deploy to and operate? 2i2c-managed means 2i2c has full administrator access to cloud provider account.",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "AWS (2i2c-managed)"
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "AWS (2i2c-managed)",
-                    "GCP (2i2c-managed)",
-                    "AWS (2i2c-managed via cloudbank)",
-                    "GCP (2i2c-managed via cloudbank)",
-                    "AWS (community-managed, Unrestricted IAM admin access for 2i2c)",
-                    "GCP (community-managed, Unrestricted IAM admin access for 2i2c)"
-                ],
-                "default": "AWS (2i2c-managed)"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "AWS (2i2c-managed)",
-                    "GCP (2i2c-managed)",
-                    "AWS (2i2c-managed via cloudbank)",
-                    "GCP (2i2c-managed via cloudbank)",
-                    "AWS (community-managed)",
-                    "GCP (community-managed)",
-                    "Azure (community-managed)",
-                    "AWS (NASA SMCE, by agreement)",
-                    "JetStream2 (by agreement)"
-                ],
-                "default": "AWS (2i2c-managed)"
-            }
+      "id": "cluster:csp",
+      "group": "Cluster",
+      "label": "Cloud Service Provider",
+      "help": "Which cloud we deploy to and operate? 2i2c-managed means 2i2c has full administrator access to cloud provider account.",
+      "perTier": {
+        "Essential": {
+          "kind": "single",
+          "text": "AWS (2i2c-managed)"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "AWS (2i2c-managed)", "label": "AWS (2i2c-managed)", "help": "2i2c operates an AWS account it controls, with full admin access." },
+            { "value": "GCP (2i2c-managed)", "label": "GCP (2i2c-managed)", "help": "2i2c operates a 2i2c-controlled Google Cloud project with admin access." },
+            { "value": "AWS (2i2c-managed via cloudbank)", "label": "AWS (2i2c-managed via cloudbank)", "help": "AWS account provisioned through the CloudBank program; operated by 2i2c." },
+            { "value": "GCP (2i2c-managed via cloudbank)", "label": "GCP (2i2c-managed via cloudbank)", "help": "GCP project via CloudBank; operated by 2i2c." },
+            { "value": "AWS (community-managed, Unrestricted IAM admin access for 2i2c)", "label": "AWS (community-managed, Unrestricted IAM admin access for 2i2c)", "help": "Community AWS account where 2i2c has unrestricted IAM admin access." },
+            { "value": "GCP (community-managed, Unrestricted IAM admin access for 2i2c)", "label": "GCP (community-managed, Unrestricted IAM admin access for 2i2c)", "help": "Community GCP project where 2i2c has unrestricted admin access." }
+          ],
+          "default": "AWS (2i2c-managed)"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "AWS (2i2c-managed)", "label": "AWS (2i2c-managed)", "help": "2i2c operates an AWS account it controls, with full admin access." },
+            { "value": "GCP (2i2c-managed)", "label": "GCP (2i2c-managed)", "help": "2i2c operates a 2i2c-controlled Google Cloud project with admin access." },
+            { "value": "AWS (2i2c-managed via cloudbank)", "label": "AWS (2i2c-managed via cloudbank)", "help": "AWS account provisioned through the CloudBank program; operated by 2i2c." },
+            { "value": "GCP (2i2c-managed via cloudbank)", "label": "GCP (2i2c-managed via cloudbank)", "help": "GCP project via CloudBank; operated by 2i2c." },
+            { "value": "AWS (community-managed)", "label": "AWS (community-managed)", "help": "Community AWS account; access model defined by agreement." },
+            { "value": "GCP (community-managed)", "label": "GCP (community-managed)", "help": "Community GCP project; access model defined by agreement." },
+            { "value": "Azure (community-managed)", "label": "Azure (community-managed)", "help": "Community Azure subscription; access model defined by agreement." },
+            { "value": "AWS (NASA SMCE, by agreement)", "label": "AWS (NASA SMCE, by agreement)", "help": "NASA Science Managed Cloud Environment AWS; special access by agreement." },
+            { "value": "JetStream2 (by agreement)", "label": "JetStream2 (by agreement)", "help": "Academic cloud (JetStream2); available by specific agreement." }
+          ],
+          "default": "AWS (2i2c-managed)"
         }
+      }
     },
     {
-        "id": "cluster:billing",
-        "group": "Cluster",
-        "label": "Cloud Billing",
-        "help": "How is the cloud bill paid?",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "2i2c holds account; pass-through costs"
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "2i2c account; pass-through costs",
-                    "Customer-owned account with 2i2c access"
-                ],
-                "default": "2i2c account; pass-through costs"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "2i2c account; pass-through costs",
-                    "Customer-owned account with 2i2c access"
-                ],
-                "default": "2i2c account; pass-through costs"
-            }
+      "id": "cluster:billing",
+      "group": "Cluster",
+      "label": "Cloud Billing",
+      "help": "How is the cloud bill paid?",
+      "perTier": {
+        "Essential": {
+          "kind": "single",
+          "text": "2i2c holds account; pass-through costs"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "2i2c account; pass-through costs", "label": "2i2c account; pass-through costs", "help": "2i2c pays the cloud provider and passes costs through to you." },
+            { "value": "Customer-owned account with 2i2c access", "label": "Customer-owned account with 2i2c access", "help": "You pay the cloud provider; 2i2c is granted required admin access." }
+          ],
+          "default": "2i2c account; pass-through costs"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "2i2c account; pass-through costs", "label": "2i2c account; pass-through costs", "help": "2i2c pays the cloud provider and passes costs through to you." },
+            { "value": "Customer-owned account with 2i2c access", "label": "Customer-owned account with 2i2c access", "help": "You pay the cloud provider; 2i2c is granted required admin access." }
+          ],
+          "default": "2i2c account; pass-through costs"
         }
+      }
     },
     {
-        "id": "signin:auth",
-        "group": "Authentication",
-        "label": "Authentication Method",
-        "help": "How can users log in to the hub?",
-        "perTier": {
-            "Essential": {
-                "kind": "select",
-                "options": [
-                    "Institutional Login (via CILogon)",
-                    "Manually adding users on JupyterHub Admin Panel (via CILogon)"
-                ],
-                "default": "GitHub (2i2c-configured)"
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "Institutional Login (via CILogon)",
-                    "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-                    "GitHub (community-managed organization)",
-                    "Shared password",
-                    "No authentication required"
-                ],
-                "default": "GitHub (2i2c-configured)"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "Institutional Login (via CILogon)",
-                    "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-                    "GitHub (community-managed organization)",
-                    "Shared password",
-                    "Customized authenticator",
-                    "No authentication required"
-                ],
-                "default": "GitHub (community-configured)"
-            }
+      "id": "signin:auth",
+      "group": "Authentication",
+      "label": "Authentication Method",
+      "help": "How can users log in to the hub?",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "Institutional Login (via CILogon)", "label": "Institutional Login (via CILogon)", "help": "Users sign in with their institution via CILogon." },
+            { "value": "Manually adding users on JupyterHub Admin Panel (via CILogon)", "label": "Manually adding users on JupyterHub Admin Panel (via CILogon)", "help": "Admins whitelist users and use CILogon for auth." },
+            { "value": "GitHub (2i2c-configured)", "label": "GitHub (2i2c-configured)", "help": "2i2c sets up and manages a GitHub OAuth app for the hub." }
+          ],
+          "default": "GitHub (2i2c-configured)"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "Institutional Login (via CILogon)", "label": "Institutional Login (via CILogon)", "help": "Users sign in with their institution via CILogon." },
+            { "value": "Manually adding users on JupyterHub Admin Panel (via CILogon)", "label": "Manually adding users on JupyterHub Admin Panel (via CILogon)", "help": "Admins whitelist users and use CILogon for auth." },
+            { "value": "GitHub (community-managed organization)", "label": "GitHub (community-managed organization)", "help": "Community owns and administers the GitHub org & OAuth app." },
+            { "value": "Shared password", "label": "Shared password", "help": "Single shared credential for access (least secure; not recommended)." },
+            { "value": "No authentication required", "label": "No authentication required", "help": "Open access hub without authentication (public access)." },
+            { "value": "GitHub (2i2c-configured)", "label": "GitHub (2i2c-configured)", "help": "2i2c sets up and manages a GitHub OAuth app for the hub." }
+          ],
+          "default": "GitHub (2i2c-configured)"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "Institutional Login (via CILogon)", "label": "Institutional Login (via CILogon)", "help": "Users sign in with their institution via CILogon." },
+            { "value": "Manually adding users on JupyterHub Admin Panel (via CILogon)", "label": "Manually adding users on JupyterHub Admin Panel (via CILogon)", "help": "Admins whitelist users and use CILogon for auth." },
+            { "value": "GitHub (community-managed organization)", "label": "GitHub (community-managed organization)", "help": "Community owns and administers the GitHub org & OAuth app." },
+            { "value": "Shared password", "label": "Shared password", "help": "Single shared credential for access (least secure; not recommended)." },
+            { "value": "Customized authenticator", "label": "Customized authenticator", "help": "Custom or enterprise identity integration by agreement." },
+            { "value": "No authentication required", "label": "No authentication required", "help": "Open access hub without authentication (public access)." },
+            { "value": "GitHub (community-configured)", "label": "GitHub (community-configured)", "help": "Community configures GitHub OAuth (distinct label used as default here)." }
+          ],
+          "default": "GitHub (community-configured)"
         }
+      }
     },
     {
-        "id": "environment:images",
-        "group": "User Environment",
-        "label": "2i2c Supported Software Environments",
-        "help": "Upstream maintained software images where 2i2c can provide limited support",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "- jupyter/scipy-notebook\n- rocker/binder"
-            },
-            "Advanced": {
-                "kind": "single",
-                "text": "- jupyter/scipy-notebook\n- rocker/binder\n- pangeo/pangeo-notebook"
-            },
-            "Premier": {
-                "kind": "single",
-                "text": "- jupyter/scipy-notebook\n- rocker/binder\n- pangeo/pangeo-notebook"
-            }
-        }
+      "id": "environment:images",
+      "group": "User Environment",
+      "label": "2i2c Supported Software Environments",
+      "help": "Upstream maintained software images where 2i2c can provide limited support",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "- jupyter/scipy-notebook\n- rocker/binder" },
+        "Advanced":  { "kind": "single", "text": "- jupyter/scipy-notebook\n- rocker/binder\n- pangeo/pangeo-notebook" },
+        "Premier":   { "kind": "single", "text": "- jupyter/scipy-notebook\n- rocker/binder\n- pangeo/pangeo-notebook" }
+      }
     },
     {
-        "id": "environment:customization",
-        "group": "User Environment",
-        "label": "Community Supported Environments",
-        "help": "Software Environment Maintained by the Community",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": true
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "environment:customization",
+      "group": "User Environment",
+      "label": "Community Supported Environments",
+      "help": "Software Environment Maintained by the Community",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": true },
+        "Advanced":  { "kind": "flag", "available": true },
+        "Premier":   { "kind": "flag", "available": true }
+      }
     },
     {
-        "id": "environment:dynimg",
-        "group": "User Environment",
-        "label": "Dynamic Image Building Support",
-        "help": "User environment dynamical built from a GitHub repository",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": true
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "environment:dynimg",
+      "group": "User Environment",
+      "label": "Dynamic Image Building Support",
+      "help": "User environment dynamical built from a GitHub repository",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": true },
+        "Advanced":  { "kind": "flag", "available": true },
+        "Premier":   { "kind": "flag", "available": true }
+      }
     },
     {
-        "id": "hub:binderhubui",
-        "group": "JupyterHub",
-        "label": "BinderHub UI",
-        "help": "Deploy with the BinderHub UI?",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": false
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "Enabled",
-                    "Disabled"
-                ],
-                "default": "Disabled"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "Enabled",
-                    "Disabled"
-                ],
-                "default": "Disabled"
-            }
+      "id": "hub:binderhubui",
+      "group": "JupyterHub",
+      "label": "BinderHub UI",
+      "help": "Deploy with the BinderHub UI?",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": false, "help": "BinderHub UI not provided in Essential.", "requires": { "id": "environment:dynimg", "op": "truthy" } },
+        "Advanced": {
+          "kind": "select",
+          "requires": { "id": "environment:dynimg", "op": "truthy" },
+          "options": [
+            { "value": "Enabled",  "label": "Enabled",  "help": "Expose Binder-like UI for launching predefined repos." },
+            { "value": "Disabled", "label": "Disabled", "help": "No BinderHub UI." }
+          ],
+          "default": "Disabled"
+        },
+        "Premier": {
+          "kind": "select",
+          "requires": { "id": "environment:dynimg", "op": "truthy" },
+          "options": [
+            { "value": "Enabled",  "label": "Enabled",  "help": "Expose Binder-like UI for launching predefined repos." },
+            { "value": "Disabled", "label": "Disabled", "help": "No BinderHub UI." }
+          ],
+          "default": "Disabled"
         }
+      }
     },
     {
-        "id": "hub:count",
-        "group": "JupyterHub",
-        "label": "Number of hubs configured",
-        "help": "How many independent hubs will be available on the cluster?",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "1 hub"
-            },
-            "Advanced": {
-                "kind": "single",
-                "text": "Up to 3 hubs"
-            },
-            "Premier": {
-                "kind": "single",
-                "text": "Up to 10 hubs"
-            }
-        }
+      "id": "hub:count",
+      "group": "JupyterHub",
+      "label": "Number of hubs configured",
+      "help": "How many independent hubs will be available on the cluster?",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "1 hub" },
+        "Advanced":  { "kind": "single", "text": "Up to 3 hubs" },
+        "Premier":   { "kind": "single", "text": "Up to 10 hubs" }
+      }
     },
     {
-        "id": "hub:dask",
-        "group": "JupyterHub",
-        "label": "Dask Gateway",
-        "help": "Does cluster support DaskGateway (Dask cluster across multiple nodes)?",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": false
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "Disabled",
-                    "Enabled"
-                ],
-                "default": "Disabled"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "Disabled",
-                    "Enabled"
-                ],
-                "default": "Disabled"
-            }
+      "id": "hub:dask",
+      "group": "JupyterHub",
+      "label": "Dask Gateway",
+      "help": "Does cluster support DaskGateway (Dask cluster across multiple nodes)?",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": false },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "Disabled", "label": "Disabled", "help": "Do not provide a Dask Gateway." },
+            { "value": "Enabled",  "label": "Enabled",  "help": "Provide a Dask Gateway for scalable distributed compute." }
+          ],
+          "default": "Disabled"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "Disabled", "label": "Disabled", "help": "Do not provide a Dask Gateway." },
+            { "value": "Enabled",  "label": "Enabled",  "help": "Provide a Dask Gateway for scalable distributed compute." }
+          ],
+          "default": "Disabled"
         }
+      }
     },
     {
-        "id": "hub:resources",
-        "group": "JupyterHub",
-        "label": "Memory / CPU profiles",
-        "help": "What machine types are available to users?",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "Fixed configuration for all users, e.g.,\n- ▸ 2GB , 1 CPU"
-            },
-            "Advanced": {
-                "kind": "single",
-                "text": "Multiple CPU/RAM choice availble to each user, e.g.,\n- ▸ 2 GB RAM, up to 4 CPUs\n- ▸ 4 GB RAM, up to 4 CPUs\n- ▸ 16 GB RAM, up to 4 CPUs\n- ▸ 64 GB RAM, up to 16 CPUs\n\nConfigurable for group based allocations."
-            },
-            "Premier": {
-                "kind": "single",
-                "text": "Multiple CPU/RAM choice availble to each user, e.g.,\n- ▸ 2 GB RAM, up to 4 CPUs\n- ▸ 4 GB RAM, up to 4 CPUs\n- ▸ 16 GB RAM, up to 4 CPUs\n- ▸ 64 GB RAM, up to 16 CPUs\n\nConfigurable for group based allocations."
-            }
-        }
+      "id": "hub:resources",
+      "group": "JupyterHub",
+      "label": "Memory / CPU profiles",
+      "help": "What machine types are available to users?",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "Fixed configuration for all users, e.g.,\n- ▸ 2GB , 1 CPU" },
+        "Advanced":  { "kind": "single", "text": "Multiple CPU/RAM choice availble to each user, e.g.,\n- ▸ 2 GB RAM, up to 4 CPUs\n- ▸ 4 GB RAM, up to 4 CPUs\n- ▸ 16 GB RAM, up to 4 CPUs\n- ▸ 64 GB RAM, up to 16 CPUs\n\nConfigurable for group based allocations." },
+        "Premier":   { "kind": "single", "text": "Multiple CPU/RAM choice availble to each user, e.g.,\n- ▸ 2 GB RAM, up to 4 CPUs\n- ▸ 4 GB RAM, up to 4 CPUs\n- ▸ 16 GB RAM, up to 4 CPUs\n- ▸ 64 GB RAM, up to 16 CPUs\n\nConfigurable for group based allocations." }
+      }
     },
     {
-        "id": "hub:gpu",
-        "group": "JupyterHub",
-        "label": "GPU",
-        "help": "Are GPU enabled nodes availble to users? (Specifics depends on cloud service provider)",
-        "perTier": {
-            "Essential": {
-                "kind": "select",
-                "options": [
-                    "None",
-                    "Available"
-                ],
-                "default": "None"
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "None",
-                    "Available"
-                ],
-                "default": "None"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "None",
-                    "Available"
-                ],
-                "default": "None"
-            }
+      "id": "hub:gpu",
+      "group": "JupyterHub",
+      "label": "GPU",
+      "help": "Are GPU enabled nodes availble to users? (Specifics depends on cloud service provider)",
+      "perTier": {
+        "Essential": {
+          "kind": "select",
+          "options": [
+            { "value": "None", "label": "None", "help": "Do not offer GPU-backed server options to users." },
+            { "value": "Available", "label": "Available", "help": "Offer GPU-backed server options where supported by the CSP/cluster." }
+          ],
+          "default": "None"
+        },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "None", "label": "None", "help": "Do not offer GPU-backed server options to users." },
+            { "value": "Available", "label": "Available", "help": "Offer GPU-backed server options where supported by the CSP/cluster." }
+          ],
+          "default": "None"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "None", "label": "None", "help": "Do not offer GPU-backed server options to users." },
+            { "value": "Available", "label": "Available", "help": "Offer GPU-backed server options where supported by the CSP/cluster." }
+          ],
+          "default": "None"
         }
+      }
     },
     {
-        "id": "home:persistent",
-        "group": "Home Directory Storage",
-        "label": "Persistent Home Directory",
-        "help": "Do user directories perist between sessions?",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "Persistent"
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "Persistent",
-                    "Ephemeral"
-                ],
-                "default": "Persistent"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "Persistent",
-                    "Ephemeral"
-                ],
-                "default": "Persistent"
-            }
+      "id": "home:persistent",
+      "group": "Home Directory Storage",
+      "label": "Persistent Home Directory",
+      "help": "Do user directories perist between sessions?",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "Persistent" },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "Persistent", "label": "Persistent", "help": "Home directories are stored on persistent volumes and survive restarts." },
+            { "value": "Ephemeral",  "label": "Ephemeral",  "help": "Home directories are temporary and may reset on rebuilds/upgrades." }
+          ],
+          "default": "Persistent"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "Persistent", "label": "Persistent", "help": "Home directories are stored on persistent volumes and survive restarts." },
+            { "value": "Ephemeral",  "label": "Ephemeral",  "help": "Home directories are temporary and may reset on rebuilds/upgrades." }
+          ],
+          "default": "Persistent"
         }
+      }
     },
     {
-        "id": "home:quotas",
-        "group": "Home Directory Storage",
-        "label": "Enforce per-user quotas",
-        "help": "Limit on home directory size per user",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": true
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "home:quotas",
+      "group": "Home Directory Storage",
+      "label": "Enforce per-user quotas",
+      "help": "Limit on home directory size per user",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": true, "requires": { "id": "home:persistent", "op": "eq", "value": "Persistent" } },
+        "Advanced":  { "kind": "flag", "available": true, "requires": { "id": "home:persistent", "op": "eq", "value": "Persistent" } },
+        "Premier":   { "kind": "flag", "available": true, "requires": { "id": "home:persistent", "op": "eq", "value": "Persistent" } }
+      }
     },
     {
-        "id": "home:shares",
-        "group": "Home Directory Storage",
-        "label": "Shared folders",
-        "help": "Is there storage on the filesystem to sharing files between users?",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "Folder editable by admins only, Readable by all users"
-            },
-            "Advanced": {
-                "kind": "single",
-                "text": "Folder editable by admins only, Readable by all users"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "Folder editable by admins only, Readable by all users",
-                    "Folder editable by all users"
-                ],
-                "default": "Folder editable by admins only, Readable by all users"
-            }
+      "id": "home:shares",
+      "group": "Home Directory Storage",
+      "label": "Shared folders",
+      "help": "Is there storage on the filesystem to sharing files between users?",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "Folder editable by admins only, Readable by all users" },
+        "Advanced":  { "kind": "single", "text": "Folder editable by admins only, Readable by all users" },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "Folder editable by admins only, Readable by all users", "label": "Admins edit, all read", "help": "Central folder managed by admins; readable by all users." },
+            { "value": "Folder editable by all users", "label": "Editable by all users", "help": "Shared writeable space; collaboration-friendly but riskier." }
+          ],
+          "default": "Folder editable by admins only, Readable by all users"
         }
+      }
     },
     {
-        "id": "obj:scratch",
-        "group": "Object Storage",
-        "label": "Scratch bucket",
-        "help": "Object Storage (automatically deleted after 7 days)",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": true
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "obj:scratch",
+      "group": "Object Storage",
+      "label": "Scratch bucket",
+      "help": "Object Storage (automatically deleted after 7 days)",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": true },
+        "Advanced":  { "kind": "flag", "available": true },
+        "Premier":   { "kind": "flag", "available": true }
+      }
     },
     {
-        "id": "obj:persistent",
-        "group": "Object Storage",
-        "label": "Persistent bucket",
-        "help": "Object Storage",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": false
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "obj:persistent",
+      "group": "Object Storage",
+      "label": "Persistent bucket",
+      "help": "Object Storage",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": false },
+        "Advanced":  { "kind": "flag", "available": true },
+        "Premier":   { "kind": "flag", "available": true }
+      }
     },
     {
-        "id": "wl:customfields",
-        "group": "White Labeling",
-        "label": "Custom fields on logged-out home page",
-        "help": "2i2c support for standarized log in home page.",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": true
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "wl:customfields",
+      "group": "White Labeling",
+      "label": "Custom fields on logged-out home page",
+      "help": "2i2c support for standarized log in home page.",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": true },
+        "Advanced":  { "kind": "flag", "available": true },
+        "Premier":   { "kind": "flag", "available": true }
+      }
     },
     {
-        "id": "wl:fullpage",
-        "group": "White Labeling",
-        "label": "Fully custom logged-out home page",
-        "help": "2i2c support for fully customized log in page.",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": false
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": false
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "wl:fullpage",
+      "group": "White Labeling",
+      "label": "Fully custom logged-out home page",
+      "help": "2i2c support for fully customized log in page.",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": false },
+        "Advanced":  { "kind": "flag", "available": false },
+        "Premier":   { "kind": "flag", "available": true }
+      }
     },
     {
-        "id": "docs:site",
-        "group": "JupyterBook Documentation",
-        "label": "docs.<community>.2i2c.cloud",
-        "help": "MyST/JupyterBook2 community documentation adjacent to your hub",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "Community configurable for static JupyterBook"
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "Community configurable for static JupyterBook",
-                    "Community configurable for static JupyterBook with BinderHub"
-                ],
-                "default": "Community configurable for static JupyterBook"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "Community configurable for static JupyterBook",
-                    "Community configurable for static JupyterBook with BinderHub"
-                ],
-                "default": "Community configurable for static JupyterBook"
-            }
+      "id": "docs:site",
+      "group": "JupyterBook Documentation",
+      "label": "docs.<community>.2i2c.cloud",
+      "help": "MyST/JupyterBook2 community documentation adjacent to your hub",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "Community configurable for static JupyterBook" },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "Community configurable for static JupyterBook", "label": "Static JupyterBook", "help": "Static site for docs built with JupyterBook." },
+            { "value": "Community configurable for static JupyterBook with BinderHub", "label": "Static JupyterBook with BinderHub", "help": "Docs with launch buttons via BinderHub (requires BinderHub UI)." }
+          ],
+          "default": "Community configurable for static JupyterBook"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "Community configurable for static JupyterBook", "label": "Static JupyterBook", "help": "Static site for docs built with JupyterBook." },
+            { "value": "Community configurable for static JupyterBook with BinderHub", "label": "Static JupyterBook with BinderHub", "help": "Docs with launch buttons via BinderHub (requires BinderHub UI)." }
+          ],
+          "default": "Community configurable for static JupyterBook"
         }
+      }
     },
     {
-        "id": "reporting:usage",
-        "group": "Reporting",
-        "label": "Usage Reporting via Grafana",
-        "help": "How has my hub being used?",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": true
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "reporting:usage",
+      "group": "Reporting",
+      "label": "Usage Reporting via Grafana",
+      "help": "How has my hub being used?",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": true },
+        "Advanced":  { "kind": "flag", "available": true },
+        "Premier":   { "kind": "flag", "available": true }
+      }
     },
     {
-        "id": "reporting:cost",
-        "group": "Reporting",
-        "label": "Cloud Cost Reporting via Grafana",
-        "help": "Cost reporting currently only availble with AWS",
-        "perTier": {
-            "Essential": {
-                "kind": "flag",
-                "available": true
-            },
-            "Advanced": {
-                "kind": "flag",
-                "available": true
-            },
-            "Premier": {
-                "kind": "flag",
-                "available": true
-            }
-        }
+      "id": "reporting:cost",
+      "group": "Reporting",
+      "label": "Cloud Cost Reporting via Grafana",
+      "help": "Cost reporting currently only availble with AWS",
+      "perTier": {
+        "Essential": { "kind": "flag", "available": true, "requires": { "id": "cluster:csp", "op": "in", "value": ["AWS (2i2c-managed)", "AWS (2i2c-managed via cloudbank)", "AWS (community-managed, Unrestricted IAM admin access for 2i2c)", "AWS (community-managed)", "AWS (NASA SMCE, by agreement)"] } },
+        "Advanced":  { "kind": "flag", "available": true, "requires": { "id": "cluster:csp", "op": "in", "value": ["AWS (2i2c-managed)", "AWS (2i2c-managed via cloudbank)", "AWS (community-managed, Unrestricted IAM admin access for 2i2c)", "AWS (community-managed)", "AWS (NASA SMCE, by agreement)"] } },
+        "Premier":   { "kind": "flag", "available": true, "requires": { "id": "cluster:csp", "op": "in", "value": ["AWS (2i2c-managed)", "AWS (2i2c-managed via cloudbank)", "AWS (community-managed, Unrestricted IAM admin access for 2i2c)", "AWS (community-managed)", "AWS (NASA SMCE, by agreement)"] } }
+      }
     },
     {
-        "id": "sales:agreement",
-        "group": "Sales / Agreements",
-        "label": "Standard 2i2c / CS&S agreement",
-        "help": "Can 2i2c use a customer provided Service Agreement?",
-        "perTier": {
-            "Essential": {
-                "kind": "single",
-                "text": "Standard 2i2c / CS&S agreement only"
-            },
-            "Advanced": {
-                "kind": "select",
-                "options": [
-                    "Standard 2i2c / CS&S agreement only",
-                    "Standard 2i2c / CS&S agreement with changes to clauses"
-                ],
-                "default": "Standard 2i2c / CS&S agreement"
-            },
-            "Premier": {
-                "kind": "select",
-                "options": [
-                    "Standard 2i2c / CS&S agreement only",
-                    "Standard 2i2c / CS&S agreement with changes to clauses",
-                    "Community supplied Service Agreement (e.g., vendor agreement)"
-                ],
-                "default": "Standard 2i2c / CS&S agreement"
-            }
+      "id": "sales:agreement",
+      "group": "Sales / Agreements",
+      "label": "Standard 2i2c / CS&S agreement",
+      "help": "Can 2i2c use a customer provided Service Agreement?",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "Standard 2i2c / CS&S agreement only" },
+        "Advanced": {
+          "kind": "select",
+          "options": [
+            { "value": "Standard 2i2c / CS&S agreement only", "label": "Standard only", "help": "Use the standard 2i2c/CS&S agreement without modifications." },
+            { "value": "Standard 2i2c / CS&S agreement with changes to clauses", "label": "Standard with changes", "help": "Use the standard agreement with mutually agreed clause changes." },
+            { "value": "Standard 2i2c / CS&S agreement", "label": "Standard agreement (label used as default)", "help": "General reference to the standard 2i2c/CS&S agreement." }
+          ],
+          "default": "Standard 2i2c / CS&S agreement"
+        },
+        "Premier": {
+          "kind": "select",
+          "options": [
+            { "value": "Standard 2i2c / CS&S agreement only", "label": "Standard only", "help": "Use the standard 2i2c/CS&S agreement without modifications." },
+            { "value": "Standard 2i2c / CS&S agreement with changes to clauses", "label": "Standard with changes", "help": "Use the standard agreement with mutually agreed clause changes." },
+            { "value": "Community supplied Service Agreement (e.g., vendor agreement)", "label": "Community-supplied agreement", "help": "Use the community’s vendor agreement, subject to review." },
+            { "value": "Standard 2i2c / CS&S agreement", "label": "Standard agreement (label used as default)", "help": "General reference to the standard 2i2c/CS&S agreement." }
+          ],
+          "default": "Standard 2i2c / CS&S agreement"
         }
+      }
     }
   ]
 }
