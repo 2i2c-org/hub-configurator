@@ -335,32 +335,20 @@
       "help": "Does this hub support Dask Gateway? Dask Gateway enable scalable distributed computing across multiple nodes.",
       "perTier": {
         "Essential": { "kind": "flag", "available": false, "help": "Dask LocalCluster is still available." },
-        "Advanced": { "kind": "select", "options": [ { "value": "Disabled", "label": "Disabled", "help": "Dask LocalCluster is still available."  }, { "value": "Enabled", "label": "Enabled" } ], "default": "Disabled" },
-        "Premier": { "kind": "select", "options": [ { "value": "Disabled", "label": "Disabled", "help": "Dask LocalCluster is still available."  }, { "value": "Enabled", "label": "Enabled" } ], "default": "Disabled" }
+        "Advanced": { "kind": "select", "options": [ { "value": "Disabled", "label": "Disabled", "help": "Dask LocalCluster is still available."  }, { "value": "Enabled", "label": "Enabled", "help": "May increase cloud costs depending on workload size." } ], "default": "Disabled" },
+        "Premier": { "kind": "select", "options": [ { "value": "Disabled", "label": "Disabled", "help": "Dask LocalCluster is still available."  }, { "value": "Enabled", "label": "Enabled", "help": "May increase cloud costs depending on workload size." } ], "default": "Disabled" }
       }
     },
     {
-      "id": "hub:resources",
-      "group": "JupyterHub",
-      "label": "Memory / CPU profiles",
-      "help": "What machine types are available to users?",
-      "perTier": {
-        "Essential": {
-          "kind": "single",
-          "text": "Fixed configuration for all users, e.g.,\n- ▸ 2GB , 1 CPU",
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "single",
-          "text": "Multiple CPU/RAM choice availble to each user, e.g.,\n- ▸ 2 GB RAM, up to 4 CPUs\n- ▸ 4 GB RAM, up to 4 CPUs\n- ▸ 16 GB RAM, up to 4 CPUs\n- ▸ 64 GB RAM, up to 16 CPUs\n\nConfigurable for group based allocations.",
-          "help": ""
-        },
-        "Premier": {
-          "kind": "single",
-          "text": "Multiple CPU/RAM choice availble to each user, e.g.,\n- ▸ 2 GB RAM, up to 4 CPUs\n- ▸ 4 GB RAM, up to 4 CPUs\n- ▸ 16 GB RAM, up to 4 CPUs\n- ▸ 64 GB RAM, up to 16 CPUs\n\nConfigurable for group based allocations.",
-          "help": ""
-        }
-      }
+    "id": "hub:resources",
+    "group": "JupyterHub",
+    "label": "Server Size Profiles",
+    "help": "Pick simple sizes; details available in tooltips.",
+    "perTier": {
+      "Essential": { "kind": "single", "text": "Fixed size for all users: Small (≈2 GB RAM, 1 CPU)" },
+      "Advanced": { "kind": "single", "text": "T‑shirt sizing per user: Small (≈2 GB, 1 CPU), Medium (≈4 GB, 2 CPU), Large (≈16 GB, up to 4 CPU), X‑Large (≈64 GB, up to 16 CPU). Group-based allocations supported." },
+      "Premier": { "kind": "single", "text": "T‑shirt sizing per user: Small (≈2 GB, 1 CPU), Medium (≈4 GB, 2 CPU), Large (≈16 GB, up to 4 CPU), X‑Large (≈64 GB, up to 16 CPU). Group-based allocations supported." }
+    }
     },
     {
       "id": "hub:gpu",
