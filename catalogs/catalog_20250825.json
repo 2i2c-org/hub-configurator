@@ -422,43 +422,19 @@
     {
       "id": "home:shares",
       "group": "Home Directory Storage",
-      "label": "Shared folders",
-      "help": "Is there storage on the filesystem to sharing files between users?",
+      "label": "Shared Folders",
+      "help": "Shared filesystem space for collaboration.",
       "perTier": {
-        "Essential": {
-          "kind": "single",
-          "text": "Folder editable by admins only, Readable by all users",
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "single",
-          "text": "Folder editable by admins only, Readable by all users",
-          "help": ""
-        },
-        "Premier": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Folder editable by admins only, Readable by all users",
-              "label": "Admins edit, all read",
-              "help": "Central folder managed by admins; readable by all users."
-            },
-            {
-              "value": "Folder editable by all users",
-              "label": "Editable by all users",
-              "help": "Shared writeable space; collaboration-friendly but riskier."
-            }
-          ],
-          "default": "Folder editable by admins only, Readable by all users",
-          "help": ""
-        }
+        "Essential": { "kind": "single", "text": "Admins edit; everyone can read." },
+        "Advanced": { "kind": "single", "text": "Admins edit; everyone can read." },
+        "Premier": { "kind": "select", "options": [ { "value": "Admins edit; everyone read", "label": "Admins edit; everyone read" }, { "value": "Everyone can edit (risky)", "label": "Editable by all users (use with caution)", "help": "Risk: users can overwrite/delete others’ files." } ], "default": "Admins edit; everyone read" }
       }
     },
     {
       "id": "obj:scratch",
       "group": "Object Storage",
-      "label": "Scratch bucket",
-      "help": "Object Storage (automatically deleted after 7 days)",
+      "label": "Scratch Bucket",
+      "help": "Temporary object storage for short-lived data; auto-deletes after 7 days",
       "perTier": {
         "Essential": {
           "kind": "flag",
@@ -481,7 +457,7 @@
       "id": "obj:persistent",
       "group": "Object Storage",
       "label": "Persistent bucket",
-      "help": "Object Storage",
+      "help": "Long-term object storage for research data and reproducible workflows",
       "perTier": {
         "Essential": {
           "kind": "flag",
