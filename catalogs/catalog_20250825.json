@@ -354,59 +354,11 @@
       "id": "hub:gpu",
       "group": "JupyterHub",
       "label": "GPU",
-      "help": "Are GPU enabled nodes availble to users? (Specifics depends on cloud service provider)",
+      "help": "Offer GPU-backed server options to users (where supported by the cloud provider).",
       "perTier": {
-        "Essential": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "None",
-              "label": "None",
-              "help": "Do not offer GPU-backed server options to users."
-            },
-            {
-              "value": "Available",
-              "label": "Available",
-              "help": "Offer GPU-backed server options where supported by the CSP/cluster."
-            }
-          ],
-          "default": "None",
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "None",
-              "label": "None",
-              "help": "Do not offer GPU-backed server options to users."
-            },
-            {
-              "value": "Available",
-              "label": "Available",
-              "help": "Offer GPU-backed server options where supported by the CSP/cluster."
-            }
-          ],
-          "default": "None",
-          "help": ""
-        },
-        "Premier": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "None",
-              "label": "None",
-              "help": "Do not offer GPU-backed server options to users."
-            },
-            {
-              "value": "Available",
-              "label": "Available",
-              "help": "Offer GPU-backed server options where supported by the CSP/cluster."
-            }
-          ],
-          "default": "None",
-          "help": ""
-        }
+        "Essential": { "kind": "select", "options": [ { "value": "None", "label": "None" }, { "value": "NVIDIA T4", "label": "Available (NVIDIA T4)" } ], "default": "None" },
+        "Advanced": { "kind": "select", "options": [ { "value": "None", "label": "None" }, { "value": "NVIDIA T4", "label": "Available (NVIDIA T4)" } ], "default": "None" },
+        "Premier": { "kind": "select", "options": [ { "value": "None", "label": "None" }, { "value": "NVIDIA T4", "label": "Available (NVIDIA T4)" } ], "default": "None" }
       }
     },
     {
