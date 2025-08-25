@@ -202,7 +202,6 @@
             { "value": "CILogon - Manual Allowlist", "label": "Manually added users (via CILogon)", "help": "Admins maintain an allowlist on the JupyterHub admin panel; CILogon for auth." },
             { "value": "GitHub - Community", "label": "GitHub (community-managed organization)", "help": "Community owns the GitHub org and OAuth app." },
             { "value": "Shared Password", "label": "Shared password", "help": "Single shared credential for workshops and events." },
-            { "value": "Shared Password", "label": "Shared password", "help": "Single shared credential for workshops; not suitable for sensitive work." },
             { "value": "No Auth", "label": "No authentication (public)", "help": "Open access; anyone can launch a session (useful for sharing content with Binder)." },
             { "value": "Custom Authenticator", "label": "Customized authenticator (by agreement)", "help": "Enterprise SSO / LDAP / SAML / OIDC integrations by agreement." }
           ],
