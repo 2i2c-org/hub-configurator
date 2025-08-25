@@ -172,108 +172,41 @@
       "id": "signin:auth",
       "group": "Authentication",
       "label": "Authentication Method",
-      "help": "How can users log in to the hub?",
+      "help": "How users log in.",
       "perTier": {
         "Essential": {
           "kind": "select",
           "options": [
-            {
-              "value": "Institutional Login (via CILogon)",
-              "label": "Institutional Login (via CILogon)",
-              "help": "Users sign in with their institution via CILogon."
-            },
-            {
-              "value": "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-              "label": "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-              "help": "Admins whitelist users and use CILogon for auth."
-            },
-            {
-              "value": "GitHub (2i2c-configured)",
-              "label": "GitHub (2i2c-configured)",
-              "help": "2i2c sets up and manages a GitHub OAuth app for the hub."
-            }
+            { "value": "CILogon - Institutional", "label": "Institutional Login (via CILogon)", "help": "Use university/organization identity via CILogon (thousands of institutions)." },
+            { "value": "CILogon - Manual Allowlist", "label": "Manually added users (via CILogon)", "help": "Admins maintain an allowlist on the JupyterHub admin panel; CILogon for auth." },
+            { "value": "GitHub - Community", "label": "GitHub (community-managed organization)", "help": "Community owns the GitHub org and OAuth app." }
           ],
-          "default": "GitHub (2i2c-configured)",
-          "help": ""
+          "default": "CILogon - Institutional"
         },
         "Advanced": {
           "kind": "select",
           "options": [
-            {
-              "value": "Institutional Login (via CILogon)",
-              "label": "Institutional Login (via CILogon)",
-              "help": "Users sign in with their institution via CILogon."
-            },
-            {
-              "value": "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-              "label": "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-              "help": "Admins whitelist users and use CILogon for auth."
-            },
-            {
-              "value": "GitHub (community-managed organization)",
-              "label": "GitHub (community-managed organization)",
-              "help": "Community owns and administers the GitHub org & OAuth app."
-            },
-            {
-              "value": "Shared password",
-              "label": "Shared password",
-              "help": "Single shared credential for access (least secure; not recommended)."
-            },
-            {
-              "value": "No authentication required",
-              "label": "No authentication required",
-              "help": "Open access hub without authentication (public access)."
-            },
-            {
-              "value": "GitHub (2i2c-configured)",
-              "label": "GitHub (2i2c-configured)",
-              "help": "2i2c sets up and manages a GitHub OAuth app for the hub."
-            }
+            { "value": "CILogon - Institutional", "label": "Institutional Login (via CILogon)", "help": "Use university/organization identity via CILogon (thousands of institutions)." },
+            { "value": "CILogon - Manual Allowlist", "label": "Manually added users (via CILogon)", "help": "Admins maintain an allowlist on the JupyterHub admin panel; CILogon for auth." },
+            { "value": "GitHub - Community", "label": "GitHub (community-managed organization)", "help": "Community owns the GitHub org and OAuth app." },
+            { "value": "GitHub - 2i2c", "label": "GitHub (2i2c-configured)", "help": "2i2c configures a GitHub org and OAuth app for the hub." },
+            { "value": "Shared Password", "label": "Shared password", "help": "Single shared credential for workshops and events." },
+            { "value": "No Auth", "label": "No authentication (public)", "help": "Open access; anyone can launch a session (useful for sharing content with Binder)." },
           ],
-          "default": "GitHub (2i2c-configured)",
-          "help": ""
+          "default": "GitHub - Community"
         },
         "Premier": {
-          "kind": "select",
+        "kind": "select",
           "options": [
-            {
-              "value": "Institutional Login (via CILogon)",
-              "label": "Institutional Login (via CILogon)",
-              "help": "Users sign in with their institution via CILogon."
-            },
-            {
-              "value": "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-              "label": "Manually adding users on JupyterHub Admin Panel (via CILogon)",
-              "help": "Admins whitelist users and use CILogon for auth."
-            },
-            {
-              "value": "GitHub (community-managed organization)",
-              "label": "GitHub (community-managed organization)",
-              "help": "Community owns and administers the GitHub org & OAuth app."
-            },
-            {
-              "value": "Shared password",
-              "label": "Shared password",
-              "help": "Single shared credential for access (least secure; not recommended)."
-            },
-            {
-              "value": "Customized authenticator",
-              "label": "Customized authenticator",
-              "help": "Custom or enterprise identity integration by agreement."
-            },
-            {
-              "value": "No authentication required",
-              "label": "No authentication required",
-              "help": "Open access hub without authentication (public access)."
-            },
-            {
-              "value": "GitHub (community-configured)",
-              "label": "GitHub (community-configured)",
-              "help": "Community configures GitHub OAuth (distinct label used as default here)."
-            }
+            { "value": "CILogon - Institutional", "label": "Institutional Login (via CILogon)", "help": "Use university/organization identity via CILogon (thousands of institutions)." },
+            { "value": "CILogon - Manual Allowlist", "label": "Manually added users (via CILogon)", "help": "Admins maintain an allowlist on the JupyterHub admin panel; CILogon for auth." },
+            { "value": "GitHub - Community", "label": "GitHub (community-managed organization)", "help": "Community owns the GitHub org and OAuth app." },
+            { "value": "GitHub - 2i2c", "label": "GitHub (2i2c-configured)", "help": "2i2c configures a GitHub org and OAuth app for the hub." },
+            { "value": "Shared Password", "label": "Shared password (not recommended)", "help": "Single shared credential for workshops; not suitable for sensitive work." },
+            { "value": "No Auth", "label": "No authentication (public)", "help": "Open access; anyone can launch a session (useful for sharing content with Binder)." },
+            { "value": "Custom Authenticator", "label": "Customized authenticator (by agreement)", "help": "Enterprise SSO / LDAP / SAML / OIDC integrations by agreement." }
           ],
-          "default": "GitHub (community-configured)",
-          "help": ""
+          "default": "GitHub - Community"
         }
       }
     },
