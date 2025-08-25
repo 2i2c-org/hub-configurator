@@ -1,6 +1,6 @@
 {
   "name": "2i2c Hub Catalog — Current (with helps & dependencies)",
-  "version": "2025.08.23",
+  "version": "2025.08.25",
   "items": [
     {
       "id": "cluster:csp",
@@ -63,12 +63,12 @@
       "id": "cluster:account",
       "group": "Cluster",
       "label": "Cloud Account",
-      "help": "",
+      "help": "Who controls the cloud account and what access 2i2c needs. May depend on procurement/compliance constraints.",
       "perTier": {
         "Essential": {
           "kind": "single",
-          "text": "2i2c-owned and managed account",
-          "help": ""
+          "text": "2i2c-managed",
+          "help": "2i2c operates an account it controls, full administrator access"
         },
         "Advanced": {
           "kind": "select",
@@ -79,14 +79,14 @@
               "help": "2i2c operates an account it controls, full administrator access"
             },
             {
-              "value": "CloudBank",
-              "label": "2i2c-managed via CloudBank",
-              "help": "Account provisioned via CloudBank; 2i2c operates it"
-            },
-            {
-              "value": "Community + Unrestricted Admin",
+              "value": "community-managed",
               "label": "Community-managed (grant 2i2c admin)",
               "help": "Your account/project; 2i2c receives unrestricted admin access"
+            }
+            {
+              "value": "cloudbank",
+              "label": "2i2c-managed via CloudBank",
+              "help": "Account provisioned via CloudBank by the community; 2i2c operates it"
             }
           ],
           "default": "2i2c-managed",
@@ -97,23 +97,23 @@
           "options": [
             {
               "value": "2i2c-managed",
-              "label": "Option 1",
+              "label": "2i2c-managed",
               "help": "2i2c operates an account it controls, full administrator access"
             },
             {
-              "value": "Community + Unrestricted Admin",
-              "label": "Option 2",
+              "value": "community-managed",
+              "label": "Community-managed (grant 2i2c admin)2",
               "help": "Your account/project; 2i2c receives unrestricted admin access"
             },
             {
-              "value": "Community + By Agreement",
+              "value": "community-managed-restrictions",
               "label": "Community-managed (by agreement)",
-              "help": "Custom access terms by agreement (e.g., NASA SMCE)."
+              "help": "Custom access terms by agreement (e.g., NASA SMCE or University accounts)"
             },
             {
               "value": "CloudBank",
-              "label": "Option 4",
-              "help": "Account provisioned via CloudBank; 2i2c operates it"
+              "label": "2i2c-managed via CloudBank",
+              "help": "Account provisioned via CloudBank by the community; 2i2c operates it"
             }
           ],
           "default": "2i2c-managed",
@@ -125,45 +125,45 @@
       "id": "cluster:billing",
       "group": "Cluster",
       "label": "Cloud Billing",
-      "help": "How is the cloud bill paid?",
+      "help": "Who is responsible for directly paying the cloud provider bill? 2i2c passes through cloud costs to the community.",
       "perTier": {
         "Essential": {
           "kind": "single",
-          "text": "2i2c holds account; pass-through costs",
-          "help": ""
+          "text": "2i2c-pays",
+          "help": "2i2c pays; pass-through costs to community."
         },
         "Advanced": {
           "kind": "select",
           "options": [
             {
-              "value": "2i2c account; pass-through costs",
-              "label": "2i2c account; pass-through costs",
-              "help": "2i2c pays the cloud provider and passes costs through to you."
+              "value": "2i2c-pays",
+              "label": "2i2c pays; pass-through costs",
+              "help": "2i2c pays the cloud provider and passes costs through to the community."
             },
             {
-              "value": "Customer-owned account with 2i2c access",
+              "value": "community-pays",
               "label": "Customer-owned account with 2i2c access",
-              "help": "You pay the cloud provider; 2i2c is granted required admin access."
+              "help": "Community pays the cloud provider directly; 2i2c is granted required admin access."
             }
           ],
-          "default": "2i2c account; pass-through costs",
+          "default": "2i2c-pays",
           "help": ""
         },
         "Premier": {
           "kind": "select",
           "options": [
             {
-              "value": "2i2c account; pass-through costs",
-              "label": "2i2c account; pass-through costs",
-              "help": "2i2c pays the cloud provider and passes costs through to you."
+              "value": "2i2c-pays",
+              "label": "2i2c pays; pass-through costs",
+              "help": "2i2c pays the cloud provider and passes costs through to the community."
             },
             {
-              "value": "Customer-owned account with 2i2c access",
+              "value": "community-pays",
               "label": "Customer-owned account with 2i2c access",
-              "help": "You pay the cloud provider; 2i2c is granted required admin access."
+              "help": "Community pays the cloud provider directly; 2i2c is granted required admin access."
             }
           ],
-          "default": "2i2c account; pass-through costs",
+          "default": "2i2c-pays",
           "help": ""
         }
       }
