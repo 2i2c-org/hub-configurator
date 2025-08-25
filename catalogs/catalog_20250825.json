@@ -478,224 +478,62 @@
     },
     {
       "id": "wl:customfields",
-      "group": "White Labeling",
-      "label": "Custom fields on logged-out home page",
-      "help": "2i2c support for standarized log in home page.",
-      "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        },
-        "Premier": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        }
-      }
+      "group": "Community Branding",
+      "label": "Log in homepage: Custom Fields",
+      "help": "Community chooses: logo, name, and a few standardized fields (e.g., ‘Funded by’, ‘Operated by’).",
+      "perTier": { 
+        "Essential": { "kind": "flag", "available": true },
+        "Advanced": { "kind": "flag", "available": true },
+        "Premier": { "kind": "flag", "available": true } }
     },
     {
       "id": "wl:fullpage",
-      "group": "White Labeling",
-      "label": "Fully custom logged-out home page",
-      "help": "2i2c support for fully customized log in page.",
+      "group": "Community Branding",
+      "label": "Log in homepage: Fully Customized",
+      "help": "",
       "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": false,
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "flag",
-          "available": false,
-          "help": ""
-        },
-        "Premier": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        }
-      }
+        "Essential": { "kind": "flag", "available": false, "help": "Community uses documentation to customize" },
+        "Advanced": { "kind": "flag", "available": false, "help": "Community uses documentation to customize" },
+        "Premier": { "kind": "flag", "available": true, "help": "2i2c will assist with a fully customized logged-out homepage" } }
     },
     {
       "id": "docs:site",
-      "group": "JupyterBook Documentation",
+      "group": "Documentation",
       "label": "docs.<community>.2i2c.cloud",
-      "help": "MyST/JupyterBook2 community documentation adjacent to your hub",
+      "help": "Static documentation site built with JupyterBook; optionally includes Binder launch buttons.",
       "perTier": {
-        "Essential": {
-          "kind": "single",
-          "text": "Community configurable for static JupyterBook",
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Community configurable for static JupyterBook",
-              "label": "Static JupyterBook",
-              "help": "Static site for docs built with JupyterBook."
-            },
-            {
-              "value": "Community configurable for static JupyterBook with BinderHub",
-              "label": "Static JupyterBook with BinderHub",
-              "help": "Docs with launch buttons via BinderHub (requires BinderHub UI)."
-            }
-          ],
-          "default": "Community configurable for static JupyterBook",
-          "help": ""
-        },
-        "Premier": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Community configurable for static JupyterBook",
-              "label": "Static JupyterBook",
-              "help": "Static site for docs built with JupyterBook."
-            },
-            {
-              "value": "Community configurable for static JupyterBook with BinderHub",
-              "label": "Static JupyterBook with BinderHub",
-              "help": "Docs with launch buttons via BinderHub (requires BinderHub UI)."
-            }
-          ],
-          "default": "Community configurable for static JupyterBook",
-          "help": ""
-        }
-      }
+      "Essential": { "kind": "single", "text": "Static JupyterBook (starter structure provided; community populates content)." },
+      "Advanced": { "kind": "select", "options": [ { "value": "Static", "label": "Static JupyterBook (starter structure provided)" }, { "value": "Static + Binder", "label": "Static JupyterBook with Binder launch buttons (requires BinderHub UI)" } ], "default": "Static" },
+      "Premier": { "kind": "select", "options": [ { "value": "Static", "label": "Static JupyterBook (starter structure provided)" }, { "value": "Static + Binder", "label": "Static JupyterBook with Binder launch buttons (requires BinderHub UI)" } ], "default": "Static" }
+    }
     },
     {
       "id": "reporting:usage",
       "group": "Reporting",
-      "label": "Usage Reporting via Grafana",
-      "help": "How has my hub being used?",
-      "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        },
-        "Premier": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        }
-      }
+      "label": "Usage Reporting (Grafana)",
+      "help": "Dashboards for active users, sessions, server sizes, GPU hours.",
+      "perTier": { "Essential": { "kind": "flag", "available": true }, "Advanced": { "kind": "flag", "available": true }, "Premier": { "kind": "flag", "available": true } }
     },
     {
       "id": "reporting:cost",
       "group": "Reporting",
-      "label": "Cloud Cost Reporting via Grafana",
-      "help": "Cost reporting currently only availble with AWS",
+      "label": "Cloud Cost Reporting (Grafana)",
+      "help": "Breakdown of cloud spend by hub/project (currently AWS only).",
       "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": true,
-          "help": "",
-          "requires": {
-            "id": "cluster:csp",
-            "op": "in",
-            "value": [
-              "AWS"
-            ]
-          }
-        },
-        "Advanced": {
-          "kind": "flag",
-          "available": true,
-          "help": "",
-          "requires": {
-            "id": "cluster:csp",
-            "op": "in",
-            "value": [
-              "AWS"
-            ]
-          }
-        },
-        "Premier": {
-          "kind": "flag",
-          "available": true,
-          "help": "",
-          "requires": {
-            "id": "cluster:csp",
-            "op": "in",
-            "value": [
-              "AWS"
-            ]
-          }
-        }
+      "Essential": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "eq", "value": "AWS" } },
+      "Advanced": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "eq", "value": "AWS" } },
+      "Premier": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "eq", "value": "AWS" } }
       }
     },
     {
       "id": "sales:agreement",
       "group": "Sales / Agreements",
-      "label": "Standard 2i2c / CS&S agreement",
-      "help": "Can 2i2c use a customer provided Service Agreement?",
+      "label": "Service Agreement",
+      "help": "Which legal agreement governs the service?",
       "perTier": {
-        "Essential": {
-          "kind": "single",
-          "text": "Standard 2i2c / CS&S agreement only",
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Standard 2i2c / CS&S agreement only",
-              "label": "Standard only",
-              "help": "Use the standard 2i2c/CS&S agreement without modifications."
-            },
-            {
-              "value": "Standard 2i2c / CS&S agreement with changes to clauses",
-              "label": "Standard with changes",
-              "help": "Use the standard agreement with mutually agreed clause changes."
-            },
-            {
-              "value": "Standard 2i2c / CS&S agreement",
-              "label": "Standard agreement (label used as default)",
-              "help": "General reference to the standard 2i2c/CS&S agreement."
-            }
-          ],
-          "default": "Standard 2i2c / CS&S agreement",
-          "help": ""
-        },
-        "Premier": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Standard 2i2c / CS&S agreement only",
-              "label": "Standard only",
-              "help": "Use the standard 2i2c/CS&S agreement without modifications."
-            },
-            {
-              "value": "Standard 2i2c / CS&S agreement with changes to clauses",
-              "label": "Standard with changes",
-              "help": "Use the standard agreement with mutually agreed clause changes."
-            },
-            {
-              "value": "Community supplied Service Agreement (e.g., vendor agreement)",
-              "label": "Community-supplied agreement",
-              "help": "Use the community’s vendor agreement, subject to review."
-            },
-            {
-              "value": "Standard 2i2c / CS&S agreement",
-              "label": "Standard agreement (label used as default)",
-              "help": "General reference to the standard 2i2c/CS&S agreement."
-            }
-          ],
-          "default": "Standard 2i2c / CS&S agreement",
-          "help": ""
-        }
+      "Essential": { "kind": "single", "text": "Standard 2i2c / CS&S agreement only" },
+      "Advanced": { "kind": "select", "options": [ { "value": "Standard only", "label": "Standard 2i2c / CS&S agreement only" }, { "value": "Standard with changes", "label": "Standard agreement with negotiated clause changes" } ], "default": "Standard only" },
+      "Premier": { "kind": "select", "options": [ { "value": "Standard only", "label": "Standard 2i2c / CS&S agreement only" }, { "value": "Standard with changes", "label": "Standard agreement with negotiated clause changes" }, { "value": "Community-supplied", "label": "Community-supplied vendor agreement (subject to review)" } ], "default": "Standard only" }
       }
     }
   ]
