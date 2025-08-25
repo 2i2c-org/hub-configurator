@@ -254,7 +254,7 @@
   };
 
   // -------- catalog loading --------
-  const DEFAULT_CATALOG = "catalogs/catalog.json";
+  const DEFAULT_CATALOG = "catalogs/catalog_20250825.json";
   const catalogParam = qs().get('catalog');
   const catalogUrl = catalogParam ? decodeURIComponent(catalogParam) : DEFAULT_CATALOG;
   const jsonMode = (qs().get('json') === 'true');
