@@ -309,11 +309,11 @@
       "id": "hub:count",
       "group": "JupyterHub",
       "label": "Number of hubs configured",
-      "help": "How many independent hubs are available on cluster?",
+      "help": "How many independent hubs are available at this membership tier?",
       "perTier": {
         "Essential": {
           "kind": "single",
-          "text": "1 hub",
+          "text": "1 hub only",
           "help": ""
         },
         "Advanced": {
