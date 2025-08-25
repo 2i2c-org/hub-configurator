@@ -211,56 +211,59 @@
       }
     },
     {
-      "id": "environment:images",
+      "id": "environment:default_image",
+      "group": "User Environment",
+      "label": "Default Environment for a Hub",
+      "help": "Set the default environment users land in (admins can still expose multiple choices).",
+      "perTier": {
+        "Essential": { "kind": "single", "text": "Configurable per hub" },
+        "Advanced": { "kind": "single", "text": "Configurable per hub" },
+        "Premier": { "kind": "single", "text": "Configurable per hub" }
+      }
+    },
+    {
+      "id": "environment:imagelist",
       "group": "User Environment",
       "label": "2i2c Supported Software Environments",
-      "help": "Upstream maintained software images where 2i2c can provide limited support",
+      "help": "Upstream maintained software images with limited support available from 2i2c",
       "perTier": {
-        "Essential": {
+        "Essential": { 
           "kind": "single",
-          "text": "- jupyter/scipy-notebook\n- rocker/binder",
-          "help": ""
+          "text": "- Scientific Python / JupyterLab (jupyter/scipy-notebook)\n- R / RStudio (rocker/binder)"
         },
         "Advanced": {
           "kind": "single",
-          "text": "- jupyter/scipy-notebook\n- rocker/binder\n- pangeo/pangeo-notebook",
-          "help": ""
+          "text": "- Scientific Python / JupyterLab (jupyter/scipy-notebook)\n- R / RStudio (rocker/binder)\n- Pangeo / JupyterLab (pangeo/pangeo-notebook)"
         },
         "Premier": {
           "kind": "single",
-          "text": "- jupyter/scipy-notebook\n- rocker/binder\n- pangeo/pangeo-notebook",
-          "help": ""
+          "text": "- Scientific Python / JupyterLab (jupyter/scipy-notebook)\n- R / RStudio (rocker/binder)\n- Pangeo / JupyterLab (pangeo/pangeo-notebook)"
         }
       }
     },
     {
-      "id": "environment:customization",
+      "id": "environment:community_image",
       "group": "User Environment",
-      "label": "Community Supported Environments",
-      "help": "Software Environment Maintained by the Community",
-      "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        },
-        "Premier": {
-          "kind": "flag",
-          "available": true,
-          "help": ""
-        }
+      "label": "Build Your Own Environment",
+      "help": "Use a Docker image created and maintained by your community.",
+      "perTier": { "Essential": { "kind": "flag", "available": true }, "Advanced": { "kind": "flag", "available": true }, "Premier": { "kind": "flag", "available": true } }
+    },
+    {
+      "id": "environment:support",
+      "group": "User Environment",
+      "label": "Assistance available from 2i2c",
+      "help": "Is 2i2c be able to assist with creation and updates of community maintained user environments?",
+      "perTier": { 
+        "Essential": { "kind": "single", "text": "Support available through online documentation" }, 
+        "Advanced": { "kind": "single", "text": "Up to 4/hrs per quarter from 2i2c for environment related support" }, 
+        "Premier": { "kind": "single", "text": "Up to 8/hrs per quarter from 2ic for environment related support" } 
       }
     },
     {
       "id": "environment:dynimg",
       "group": "User Environment",
       "label": "Dynamic Image Building Support",
-      "help": "User environment dynamical built from a GitHub repository",
+      "help": "Build user environments automatically from a GitHub repository (e.g., repo2docker; requirements.txt, environment.yml)",
       "perTier": {
         "Essential": {
           "kind": "flag",
@@ -280,69 +283,21 @@
       }
     },
     {
-      "id": "hub:binderhubui",
-      "group": "JupyterHub",
-      "label": "BinderHub UI",
-      "help": "Deploy with the BinderHub UI?",
-      "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": false,
-          "help": "BinderHub UI not provided in Essential.",
-          "requires": {
-            "id": "environment:dynimg",
-            "op": "truthy"
-          }
-        },
-        "Advanced": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Enabled",
-              "label": "Enabled",
-              "help": "Expose Binder-like UI for launching predefined repos."
-            },
-            {
-              "value": "Disabled",
-              "label": "Disabled",
-              "help": "No BinderHub UI."
-            }
-          ],
-          "default": "Disabled",
-          "help": "",
-          "requires": {
-            "id": "environment:dynimg",
-            "op": "truthy"
-          }
-        },
-        "Premier": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Enabled",
-              "label": "Enabled",
-              "help": "Expose Binder-like UI for launching predefined repos."
-            },
-            {
-              "value": "Disabled",
-              "label": "Disabled",
-              "help": "No BinderHub UI."
-            }
-          ],
-          "default": "Disabled",
-          "help": "",
-          "requires": {
-            "id": "environment:dynimg",
-            "op": "truthy"
-          }
+        "id": "hub:binderhubui",
+        "group": "JupyterHub",
+        "label": "BinderHub UI",
+        "help": "Offer users Binder-like UI for launching repositories instead of predefined list of images.",
+        "perTier": {
+            "Essential": { "kind": "flag", "available": false, "help": "Not available in Essential.", "requires": { "id": "environment:dynimg", "op": "truthy" } },
+            "Advanced": { "kind": "select", "requires": { "id": "environment:dynimg", "op": "truthy" }, "options": [ { "value": "Enabled": "Enabled" }, { "value": "Disabled", "label": "Disabled" } ], "default": "Disabled" },
+            "Premier": { "kind": "select", "requires": { "id": "environment:dynimg", "op": "truthy" }, "options": [ { "value": "Enabled", "label": "Enabled" }, { "value": "Disabled", "label": "Disabled" } ], "default": "Disabled" }
         }
-      }
     },
     {
       "id": "hub:count",
       "group": "JupyterHub",
       "label": "Number of hubs configured",
-      "help": "How many independent hubs will be available on the cluster?",
+      "help": "How many independent hubs are available on cluster?",
       "perTier": {
         "Essential": {
           "kind": "single",
