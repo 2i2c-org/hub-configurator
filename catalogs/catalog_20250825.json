@@ -288,9 +288,21 @@
         "label": "BinderHub UI",
         "help": "Offer users Binder-like UI for launching repositories instead of predefined list of images.",
         "perTier": {
-            "Essential": { "kind": "flag", "available": false, "help": "Not available in Essential.", "requires": { "id": "environment:dynimg", "op": "truthy" } },
-            "Advanced": { "kind": "select", "requires": { "id": "environment:dynimg", "op": "truthy" }, "options": [ { "value": "Enabled": "Enabled" }, { "value": "Disabled", "label": "Disabled" } ], "default": "Disabled" },
-            "Premier": { "kind": "select", "requires": { "id": "environment:dynimg", "op": "truthy" }, "options": [ { "value": "Enabled", "label": "Enabled" }, { "value": "Disabled", "label": "Disabled" } ], "default": "Disabled" }
+            "Essential": { 
+              "kind": "flag", "available": false, "help": "Not available in Essential.", "requires": { "id": "environment:dynimg", "op": "truthy" } 
+            },
+            "Advanced": { 
+              "kind": "select", 
+              "requires": { "id": "environment:dynimg", "op": "truthy" }, 
+              "options": [ { "value": "Enabled", "label": "Enabled" }, { "value": "Disabled", "label": "Disabled" } ], 
+              "default": "Disabled" 
+            },
+            "Premier": { 
+              "kind": "select", 
+              "requires": { "id": "environment:dynimg", "op": "truthy" }, 
+              "options": [ { "value": "Enabled", "label": "Enabled" }, { "value": "Disabled", "label": "Disabled" } ], 
+              "default": "Disabled" 
+            }
         }
     },
     {
