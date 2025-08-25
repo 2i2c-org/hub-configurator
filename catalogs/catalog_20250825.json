@@ -82,7 +82,7 @@
               "value": "community-managed",
               "label": "Community-managed (grant 2i2c admin)",
               "help": "Your account/project; 2i2c receives unrestricted admin access"
-            }
+            },
             {
               "value": "cloudbank",
               "label": "2i2c-managed via CloudBank",
@@ -106,7 +106,7 @@
               "help": "Your account/project; 2i2c receives unrestricted admin access"
             },
             {
-              "value": "community-managed-restrictions",
+              "value": "community-managed-agreement",
               "label": "Community-managed (by agreement)",
               "help": "Custom access terms by agreement (e.g., NASA SMCE or University accounts)"
             },
