@@ -332,47 +332,11 @@
       "id": "hub:dask",
       "group": "JupyterHub",
       "label": "Dask Gateway",
-      "help": "Does cluster support DaskGateway (Dask cluster across multiple nodes)?",
+      "help": "Does this hub support Dask Gateway? Dask Gateway enable scalable distributed computing across multiple nodes.",
       "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": false,
-          "help": ""
-        },
-        "Advanced": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Disabled",
-              "label": "Disabled",
-              "help": "Do not provide a Dask Gateway."
-            },
-            {
-              "value": "Enabled",
-              "label": "Enabled",
-              "help": "Provide a Dask Gateway for scalable distributed compute."
-            }
-          ],
-          "default": "Disabled",
-          "help": ""
-        },
-        "Premier": {
-          "kind": "select",
-          "options": [
-            {
-              "value": "Disabled",
-              "label": "Disabled",
-              "help": "Do not provide a Dask Gateway."
-            },
-            {
-              "value": "Enabled",
-              "label": "Enabled",
-              "help": "Provide a Dask Gateway for scalable distributed compute."
-            }
-          ],
-          "default": "Disabled",
-          "help": ""
-        }
+        "Essential": { "kind": "flag", "available": false, "help": "Dask LocalCluster is still available." },
+        "Advanced": { "kind": "select", "options": [ { "value": "Disabled", "label": "Disabled", "help": "Dask LocalCluster is still available."  }, { "value": "Enabled", "label": "Enabled" } ], "default": "Disabled" },
+        "Premier": { "kind": "select", "options": [ { "value": "Disabled", "label": "Disabled", "help": "Dask LocalCluster is still available."  }, { "value": "Enabled", "label": "Enabled" } ], "default": "Disabled" }
       }
     },
     {
