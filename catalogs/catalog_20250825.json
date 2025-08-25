@@ -411,39 +411,12 @@
     {
       "id": "home:quotas",
       "group": "Home Directory Storage",
-      "label": "Enforce per-user quotas",
+      "label": "Per-user Storage Quotas",
       "help": "Limit on home directory size per user",
       "perTier": {
-        "Essential": {
-          "kind": "flag",
-          "available": true,
-          "help": "",
-          "requires": {
-            "id": "home:persistent",
-            "op": "eq",
-            "value": "Persistent"
-          }
-        },
-        "Advanced": {
-          "kind": "flag",
-          "available": true,
-          "help": "",
-          "requires": {
-            "id": "home:persistent",
-            "op": "eq",
-            "value": "Persistent"
-          }
-        },
-        "Premier": {
-          "kind": "flag",
-          "available": true,
-          "help": "",
-          "requires": {
-            "id": "home:persistent",
-            "op": "eq",
-            "value": "Persistent"
-          }
-        }
+        "Essential": { "kind": "single", "text": "Default: 10 GB (configurable)" },
+        "Advanced": { "kind": "single", "text": "Default: 10 GB (configurable)" },
+        "Premier": { "kind": "single", "text": "Default: 10 GB (configurable)" }
       }
     },
     {
