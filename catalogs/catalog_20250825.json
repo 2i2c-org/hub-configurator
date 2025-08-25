@@ -3,7 +3,7 @@
   "version": "2025.08.25",
   "items": [
     {
-      "id": "cluster:csp",
+      "id": "cluster:provider",
       "group": "Cluster",
       "label": "Cloud Service Provider",
       "help": "Which cloud do we deploy onto? This is independent of who owns/pays for the account.",
@@ -520,9 +520,9 @@
       "label": "Cloud Cost Reporting (Grafana)",
       "help": "Breakdown of cloud spend by hub/project (currently AWS only).",
       "perTier": {
-      "Essential": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "eq", "value": "AWS" } },
-      "Advanced": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "eq", "value": "AWS" } },
-      "Premier": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "eq", "value": "AWS" } }
+      "Essential": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "in", "value": ["AWS"] } },
+      "Advanced": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "in", "value": ["AWS"] } },
+      "Premier": { "kind": "flag", "available": true, "requires": { "id": "cluster:provider", "op": "in", "value": ["AWS"] } }
       }
     },
     {
