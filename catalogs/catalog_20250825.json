@@ -1,5 +1,5 @@
 {
-  "name": "2i2c Hub Catalog — Current (with helps & dependencies)",
+  "name": "2i2c Hub Catalog",
   "version": "2025.08.25",
   "items": [
     {
@@ -201,8 +201,8 @@
             { "value": "CILogon - Institutional", "label": "Institutional Login (via CILogon)", "help": "Use university/organization identity via CILogon (thousands of institutions)." },
             { "value": "CILogon - Manual Allowlist", "label": "Manually added users (via CILogon)", "help": "Admins maintain an allowlist on the JupyterHub admin panel; CILogon for auth." },
             { "value": "GitHub - Community", "label": "GitHub (community-managed organization)", "help": "Community owns the GitHub org and OAuth app." },
-            { "value": "GitHub - 2i2c", "label": "GitHub (2i2c-configured)", "help": "2i2c configures a GitHub org and OAuth app for the hub." },
-            { "value": "Shared Password", "label": "Shared password (not recommended)", "help": "Single shared credential for workshops; not suitable for sensitive work." },
+            { "value": "Shared Password", "label": "Shared password", "help": "Single shared credential for workshops and events." },
+            { "value": "Shared Password", "label": "Shared password", "help": "Single shared credential for workshops; not suitable for sensitive work." },
             { "value": "No Auth", "label": "No authentication (public)", "help": "Open access; anyone can launch a session (useful for sharing content with Binder)." },
             { "value": "Custom Authenticator", "label": "Customized authenticator (by agreement)", "help": "Enterprise SSO / LDAP / SAML / OIDC integrations by agreement." }
           ],
